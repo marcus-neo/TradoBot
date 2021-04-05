@@ -7,6 +7,8 @@ import argparse
 import random
 import datetime
 from classify import Classify
+from normalisePandas import normPd
+from initialparameters import initialparameters
 
 
 def chooseSample(tickerList):
@@ -19,7 +21,7 @@ def chooseSample(tickerList):
     else:
         choices = length - 100
         randomIndex = random.randint(0, choices)
-        return sample, hist.iloc[randomIndex : randomIndex + 100]
+        return sample, normPd(hist.iloc[randomIndex : randomIndex + 100])
 
 
 # def args_parser():
@@ -61,8 +63,10 @@ def backtester():
         + "."
     )
     # print(sample)
-    output = Classify(sample["Close"].to_numpy())
+    output = Classify(sample["Close"].to_numpy(), 5)
     print(output)
+    input = initialparameters(sample, 5)
+    print(input)
     # model = keras.models.load_model(args.inputModel)
 
 
