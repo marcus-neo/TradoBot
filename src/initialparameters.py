@@ -11,10 +11,9 @@ from classify import Classify
 
 
 def initialparameters(timeSeries, number=5):
-    indexList = [i for i in range(100)]
-    outputList = [([0] * (number * 5))] * 100
+    outputList = [([0] * ((number * 5)))] * len(timeSeries)
 
-    for j in range(100):
+    for j in range(len(timeSeries)):
         if j >= number:
             initialise = [0] * (number * 5)
             for i in range(number):
@@ -23,6 +22,8 @@ def initialparameters(timeSeries, number=5):
                 initialise[i * number + 2] = timeSeries.iloc[j - i - 1]["Low"]
                 initialise[i * number + 3] = timeSeries.iloc[j - i - 1]["Close"]
                 initialise[i * number + 4] = timeSeries.iloc[j - i - 1]["Volume"]
+            # print("j=" + str(j))
+            # print("outputList.size" + str(len(outputList)))
             outputList[j] = initialise
     return outputList
 

@@ -15,6 +15,7 @@ def chooseSample(tickerList):
     sample = tickerList.sample().values.flatten()[0]
     ticker = yf.Ticker(sample)
     hist = ticker.history(period="max")
+    hist = hist.drop(columns=["Dividends", "Stock Splits"])
     length = len(hist.index)
     if length < 100:
         chooseSample(tickerList)
@@ -63,10 +64,16 @@ def backtester():
         + "."
     )
     # print(sample)
-    output = Classify(sample["Close"].to_numpy(), 5)
+    # print(sample)
+    output = Classify(sample, 5)
     print(output)
+    print("Output length = " + str(len(output)))
     input = initialparameters(sample, 5)
+    input = input[5:]
+    input = input[0 : len(output)]
     print(input)
+    print("Input length = " + str(len(input)))
+
     # model = keras.models.load_model(args.inputModel)
 
 

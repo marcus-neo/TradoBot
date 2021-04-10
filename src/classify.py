@@ -1,4 +1,5 @@
-def Classify(close,number):
+def Classify(closeSeries, number):
+    close = closeSeries["Close"].to_numpy()
     output = [0] * len(close)
     for i in range(len(close)):
         if i >= number:
@@ -12,4 +13,13 @@ def Classify(close,number):
                 elif close[i + offset] > 1.05 * close[i]:
                     position = 1
             output[i] = position
-    return output
+    # closeSeries["Decision"] = output
+    pos = len(output) - 1
+    for i in range(len(output)):
+        if output[-i - 1] != 0:
+            break
+        else:
+            pos -= 1
+
+    # return closeSeries.iloc[number : pos - 1]
+    return output[number : pos - 1]
