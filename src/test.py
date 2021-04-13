@@ -7,12 +7,12 @@ import backtester
 
 np.set_printoptions(threshold=sys.maxsize)
 tickerLst = pd.read_csv("../StockTickers/TickerNames.csv", header=None)
-while True:
-    try:
-        [sampleTicker, sample] = backtester.chooseSample(tickerLst)
-        break
-    except:
-        pass
+# while True:
+#     try:
+[sampleTicker, sample] = backtester.chooseSample(tickerLst)
+#     break
+# except:
+#     pass
 print(sampleTicker)
 print(sample)
 openn = sample["Open"].to_numpy()
@@ -121,5 +121,5 @@ vosc = ti.vosc(close, 2, 5)
 print(vosc, len(vosc))
 wad = ti.wad(high, low, close)
 print(wad, len(wad))
-willr = ti.willr(high, low, close)
+willr = ti.willr(high, low, close, 5)
 print(willr, len(willr))

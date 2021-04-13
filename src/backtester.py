@@ -22,7 +22,7 @@ def chooseSample(tickerList):
     else:
         choices = length - 100
         randomIndex = random.randint(0, choices)
-        return sample, normPd(hist.iloc[randomIndex : randomIndex + 100])
+        return sample, normPd(hist.iloc[randomIndex: randomIndex + 100])
 
 
 # def args_parser():
@@ -41,7 +41,7 @@ def chooseSample(tickerList):
 def backtester():
     # Load argument variables
     # args = args_parser()
-    tickerLst = pd.read_csv("../StockTickers/TickerNames.csv", header=None)
+    tickerLst = pd.read_csv("../StockTickers/TickerNames2.csv", header=None)
     print(
         "Loading random ticker for test. Ignore any subsequent errors until test is loaded."
     )
@@ -70,7 +70,7 @@ def backtester():
     print("Output length = " + str(len(output)))
     input = initialparameters(sample, 5)
     input = input[5:]
-    input = input[0 : len(output)]
+    input = input[0: len(output)]
     print(input)
     print("Input length = " + str(len(input)))
 
