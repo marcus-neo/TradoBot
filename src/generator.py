@@ -1,6 +1,7 @@
 import pandas as pd
 import yfinance as yf
 import numpy as np
+import tulipy as ti
 from sklearn import preprocessing
 # import keras
 import argparse
@@ -59,22 +60,64 @@ class Generator:
         self.successful_trade_percent = 0.01*successful_trade_percent
         self.ticker_list_directory = ticker_list_directory
         self.total_samples = total_samples
-        self.kwargs = kwargs or None
+        self.kwargs = kwargs.items()
 
     def total_columns(self):
         return 5
 
+    def _custom_arguments(self, dataframe):
+        dataframe = dataframe.astype('float64')
+        open_list = dataframe["Open"].to_numpy()
+        high_list = dataframe["High"].to_numpy()
+        low_list = dataframe["Low"].to_numpy()
+        close_list = dataframe["Close"].to_numpy()
+        volume_list = dataframe["Volume"].to_numpy()
+
+        for key, value in self.kwargs:
+            param = ""
+            if "open" in value[0]:
+                param += "open=open_list"
+            if "high" in value[0]:
+                if param:
+                    param += ", "
+                param += "high=high_list"
+            if "low" in value[0]:
+                if param:
+                    param += ", "
+                param += "low=low_list"
+            if "close" in value[0]:
+                if param:
+                    param += ", "
+                param += "close=close_list"
+            if "volume" in value[0]:
+                if param:
+                    param += ", "
+                param += "volume=volume_list"
+            class_method = getattr(ti, key)
+            print(class_method)
+            print(param)
+            custom_output = eval("class_method" + "(" + param + ")")
+            if custom_output.ndim == 1:
+                dataframe[class_method.__name__] = custom_output
+            else:
+                for i in range(value[1]):
+                    dataframe[class_method.__name__ +
+                              str(i)] = custom_output[i]
+
+        return dataframe
+
     def ticker_list(self):
         return pd.read_csv(self.ticker_list_directory, header=None)
 
+    def _normalize_dataframe(self, dataframe):
+        vals = dataframe
+        min_max_scaler = preprocessing.MinMaxScaler()
+        scaled_vals = min_max_scaler.fit_transform(vals)
+        dataframe = pd.DataFrame(
+            scaled_vals, columns=dataframe.columns, index=dataframe.index)
+        return dataframe
+
     def _choose_sample(self):
-        def __normalize_dataframe(dataframe):
-            vals = dataframe
-            min_max_scaler = preprocessing.MinMaxScaler()
-            scaled_vals = min_max_scaler.fit_transform(vals)
-            dataframe = pd.DataFrame(
-                scaled_vals, columns=dataframe.columns, index=dataframe.index)
-            return dataframe
 
         sample = self.ticker_list().sample().values.flatten()[0]
         try:
@@ -90,12 +133,12 @@ class Generator:
         else:
             choices = length - 100
             randomIndex = random.randint(0, choices)
-            return sample, __normalize_dataframe(hist.iloc[randomIndex: randomIndex + 100])
+            return sample, hist.iloc[randomIndex: randomIndex + 100]
 
-    def _classify(self, sample):
-        close = sample["Close"].to_numpy()
-        high = sample["High"].to_numpy()
-        low = sample["Low"].to_numpy()
+    def _classify(self, preprocessed_data):
+        close = preprocessed_data["Close"].to_numpy()
+        high = preprocessed_data["High"].to_numpy()
+        low = preprocessed_data["Low"].to_numpy()
         output = [0] * len(close)
         for i in range(len(close)):
             if i >= self.prediction_length:
@@ -136,12 +179,15 @@ class Generator:
     def generate(self):
         df = pd.DataFrame()
         for _ in range(self.total_samples):
-            sample_name, sample = self._choose_sample()
+            sample_name, preprocessed_data = self._choose_sample()
             # print(sample)
-            row_names = list(sample.index)
-            dates = [d.strftime("%m-%d-%Y") for d in row_names]
-            output_data = self._classify(sample)
-            input_data = self._initial_parameters(sample)
+            # row_names = list(sample.index)
+            # dates = [d.strftime("%m-%d-%Y") for d in row_names]
+            processed_data = self._custom_arguments(preprocessed_data)
+            normalized_data = self._normalize_dataframe(processed_data)
+            print(normalized_data)
+            output_data = self._classify(preprocessed_data)
+            input_data = self._initial_parameters(preprocessed_data)
             input_data = input_data[self.past_window_size:]
             input_data = input_data[:len(output_data)]
             for i in range(len(output_data)):
@@ -152,7 +198,7 @@ class Generator:
 
 
 if __name__ == "__main__":
-    trainingSet = Generator()
+    trainingSet = Generator(ad=(["high", "low", "close", "volume"], 1))
     output_data_frame = trainingSet.generate()
-    print(output_data_frame)
+    # print(output_data_frame)
     output_data_frame.to_csv("sampleTrain.csv")
