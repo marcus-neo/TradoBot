@@ -30,7 +30,7 @@ class Generator:
         prediction_length=5,
         total_window=100,
         successful_trade_percent=15.,
-        total_samples=1,
+        total_samples=20,
         ticker_list_directory="../StockTickers/TickerNames2.csv",
         **kwargs
     ):
@@ -145,7 +145,7 @@ class Generator:
         sample = self.ticker_list().sample().values.flatten()[0]
         try:
             ticker = yf.Ticker(sample)
-            hist = ticker.history(period="3Y")
+            hist = ticker.history(period="max")
         except:
             [sampleTicker, sample] = self._chooseSample()
         hist = hist.drop(columns=["Dividends", "Stock Splits"])
