@@ -3,7 +3,6 @@ import yfinance as yf
 import numpy as np
 import tulipy as ti
 from sklearn import preprocessing
-# import keras
 import argparse
 import random
 import datetime
@@ -26,6 +25,7 @@ class Generator:
 
     def __init__(
         self,
+        *args,
         past_window_size=5,
         prediction_length=5,
         total_window=100,
@@ -60,6 +60,7 @@ class Generator:
         self.successful_trade_percent = 0.01*successful_trade_percent
         self.ticker_list_directory = ticker_list_directory
         self.total_samples = total_samples
+        self.args = args
         self.kwargs = kwargs.items()
 
     def _custom_arguments(self, dataframe):
@@ -71,6 +72,23 @@ class Generator:
         volume_list = dataframe["Volume"].to_numpy()
         smallest_output = len(dataframe)
         extra_column_dict = {}
+
+        for item in self.args:
+            if item == "no_open":
+                dataframe = dataframe.drop(columns='Open')
+            elif item == "no_close":
+                dataframe = dataframe.drop(columns='Close')
+            elif item == "no_high":
+                dataframe = dataframe.drop(columns='High')
+            elif item == "no_low":
+                dataframe = dataframe.drop(columns='Low')
+            elif item == "no_volume":
+                dataframe = dataframe.drop(columns='Volume')
+            else:
+                raise ValueError (
+                    "Invalid argument " + item
+                )
+
         for key, value in self.kwargs:
             param = ""
             if "open" in value["primary_columns"]:
@@ -101,22 +119,14 @@ class Generator:
                 if len(custom_output) < len(dataframe):
                     print(len(custom_output))
                     smallest_output = min(smallest_output, len(custom_output))
-                    # difference = len(dataframe) - len(custom_output)
-                    # dataframe = dataframe.iloc[difference:]
                 extra_column_dict[class_method.__name__] = custom_output
-                # dataframe[class_method.__name__] = custom_output
             else:
-                # difference = len(dataframe) - len(custom_output[0])
-                # dataframe = dataframe.iloc[difference:]
-
                 for i in range(value["output_columns"]):
                     if len(custom_output[i]) < len(dataframe):
                         smallest_output = min(
                             smallest_output, len(custom_output[i]))
                     extra_column_dict[class_method.__name__ +
                                       str(i)] = custom_output[i]
-                    # dataframe[class_method.__name__ +
-                    #             str(i)] = custom_output[i]
         difference = len(dataframe) - smallest_output
         dataframe = dataframe.iloc[difference:]
         with pd.option_context('mode.chained_assignment', None):
@@ -222,6 +232,8 @@ class Generator:
 
 if __name__ == "__main__":
     trainingSet = Generator(
+        'no_open',
+        'no_close',
         stoch={
             "primary_columns": ["high", "low", "close"],
             "output_columns": 2,
@@ -235,4 +247,6 @@ if __name__ == "__main__":
     )
 
     output_data_frame = trainingSet.generate()
+    print(output_data_frame)
+    exit()
     output_data_frame.to_csv("sampleTrain.csv")
