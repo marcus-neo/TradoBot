@@ -1,4 +1,4 @@
-name: traderbot
+name: tradobot
 channels:
   - ranaroussi
   - conda-forge
