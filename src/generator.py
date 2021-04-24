@@ -25,12 +25,17 @@ class Generator:
         *args : Additional commands to remove primary rows from output.
             Possible commands are "no_open", "no_close", "no_high", "no_low", "no_volume"
 
+        ordered_or_shuffled : Whether the data is ordered or randomly shuffled
         past_window_size : how far in the past that you would want the model to have, in order to make its prediction.
 
         prediction_length : if the model gives a signal, how long in the future does that signal stand?
             (example if model says buy and TP not hit after (prediction_length) intervals, then it's signal is wrong)
 
-        total_window : initial timeframe taken from each sample (prior to shaving).
+        random_dates_total_window : The window that will be used for each sample, ending with the last available trading date.
+
+        fixed_dates_start : The start date
+
+        fixed_dates_end : The end date
 
         successful_trade_percent : take-profit percentage (for both long and short trades).
 
@@ -38,7 +43,7 @@ class Generator:
 
         ticker_list_directory : file location of the list of tickers.
 
-        **kwargs : Additional commands to add indicators. All indicators can be found at 
+        **kwargs : Additional commands to add indicators. All indicators can be found at
         https://tulipindicators.org/list. Currently only support indicator type.
 
         Add kwargs in the form of:
@@ -49,7 +54,7 @@ class Generator:
         },
 
     Outputs:
-        The array of lists to be used for training. 
+        The array of lists to be used for training.
 
 
     """
@@ -57,32 +62,52 @@ class Generator:
     def __init__(
         self,
         *args,
+        ordered_or_shuffled="ordered",
         past_window_size=5,
         prediction_length=5,
-        total_window=100,
         successful_trade_percent=15.0,
-        total_samples=20,
+        total_samples=2,
         ticker_list_directory="../StockTickers/TickerNames.csv",
+        random_dates_total_window=None,
+        fixed_dates_start=None,
+        fixed_dates_end=None,
         **kwargs
     ):
+        if ordered_or_shuffled not in ["shuffled", "ordered"]:
+            raise ValueError(
+                "invalid 'ordered_or_shuffled' parameter. Only 'ordered' or 'shuffled' are accepted."
+            )
         if past_window_size < 5:
             raise ValueError(
                 "past_window_size is currently < 5, but is required to be >= 5"
             )
         if prediction_length < 1:
             raise ValueError("prediction_length cannot be 0 or negative.")
-        if total_window < past_window_size + prediction_length:
-            raise ValueError(
-                "total_window needs to be greater than past_window_size + prediction_length"
-            )
+        if random_dates_total_window is None:
+            if fixed_dates_end == None and fixed_dates_start == None:
+                raise ValueError(
+                    "either random_dates_total_window or fix_dates input has to have a value"
+                )
+            elif fixed_dates_end == None:
+                raise ValueError("fixed_dates_end needs to be filled in")
+            elif fixed_dates_start == None:
+                raise ValueError("fixed_dates_start needs to be filled in")
+
+        elif not random_dates_total_window is None:
+            if random_dates_total_window < past_window_size + prediction_length:
+                raise ValueError(
+                    "total_window needs to be greater than past_window_size + prediction_length"
+                )
         if successful_trade_percent <= 0.0:
-            raise ValueError(
-                "successful_trade_percent cannot be 0 or negative")
+            raise ValueError("successful_trade_percent cannot be 0 or negative")
         if total_samples <= 0:
             raise ValueError("total_samples cannot be 0 or negative")
+        self.ordered_or_shuffled = ordered_or_shuffled
         self.past_window_size = past_window_size
         self.prediction_length = prediction_length
-        self.total_window = total_window
+        self.random_dates_total_window = random_dates_total_window
+        self.fixed_dates_start = fixed_dates_start
+        self.fixed_dates_end = fixed_dates_end
         self.successful_trade_percent = 0.01 * successful_trade_percent
         self.ticker_list_directory = ticker_list_directory
         self.total_samples = total_samples
@@ -91,26 +116,22 @@ class Generator:
 
     def _custom_arguments(self, dataframe):
         """
-            Adds indicator columns (if any) and remove primary columns (if requested)
+        Adds indicator columns (if any) and remove primary columns (if requested)
 
-            inputs:
-                Original dataframe
+        inputs:
+            Original dataframe
 
-            outputs:
-                Processed dataframe with additional indicator columns and potential primary columns removed.
+        outputs:
+            Processed dataframe with additional indicator columns and potential primary columns removed.
 
         """
         dataframe = dataframe.astype("float64")
-        open_list = dataframe["Open"].to_numpy(
-        )  # pylint: disable=unused-variable
-        high_list = dataframe["High"].to_numpy(
-        )  # pylint: disable=unused-variable
-        low_list = dataframe["Low"].to_numpy(
-        )  # pylint: disable=unused-variable
-        close_list = dataframe["Close"].to_numpy(
-        )  # pylint: disable=unused-variable
-        volume_list = dataframe["Volume"].to_numpy(
-        )  # pylint: disable=unused-variable
+        # pylint: disable=unused-variable
+        open_list = dataframe["Open"].to_numpy()  # pylint: disable=unused-variable
+        high_list = dataframe["High"].to_numpy()  # pylint: disable=unused-variable
+        low_list = dataframe["Low"].to_numpy()  # pylint: disable=unused-variable
+        close_list = dataframe["Close"].to_numpy()  # pylint: disable=unused-variable
+        volume_list = dataframe["Volume"].to_numpy()  # pylint: disable=unused-variable
         smallest_output = len(dataframe)
         extra_column_dict = {}
 
@@ -161,10 +182,8 @@ class Generator:
             else:
                 for i in range(value["output_columns"]):
                     if len(custom_output[i]) < len(dataframe):
-                        smallest_output = min(
-                            smallest_output, len(custom_output[i]))
-                    extra_column_dict[class_method.__name__ +
-                                      str(i)] = custom_output[i]
+                        smallest_output = min(smallest_output, len(custom_output[i]))
+                    extra_column_dict[class_method.__name__ + str(i)] = custom_output[i]
         difference = len(dataframe) - smallest_output
         dataframe = dataframe.iloc[difference:]
         with pd.option_context("mode.chained_assignment", None):
@@ -179,19 +198,19 @@ class Generator:
 
     def ticker_list(self):
         """
-            Reads the csv file from the class attribute ticker_list_directory, and returns a pandas dataframe
+        Reads the csv file from the class attribute ticker_list_directory, and returns a pandas dataframe
         """
         return pd.read_csv(self.ticker_list_directory, header=None)
 
     def _normalize_dataframe(self, dataframe):
         """
-            Normalizes all columns in the dataframe (normalised with respect to only data within the column)
+        Normalizes all columns in the dataframe (normalised with respect to only data within the column)
 
-            Input:
-                Unnormalized dataframe
+        Input:
+            Unnormalized dataframe
 
-            Output:
-                Normalized dataframe
+        Output:
+            Normalized dataframe
         """
         vals = dataframe
         min_max_scaler = preprocessing.MinMaxScaler()
@@ -203,34 +222,55 @@ class Generator:
 
     def _choose_sample(self):
         """
-            Choose valid sample provided by the function ticker_list.
-            Examples of invalid samples are:
-                1. Samples with error outputs by yfinance library
-                2. Samples with Null values
-                3. Samples with less data than pass_window_size + prediction_length
-            Upon finding invalid samples, the function is run again, this time finding another random ticker.
+        Choose valid sample provided by the function ticker_list.
+        Examples of invalid samples are:
+            1. Samples with error outputs by yfinance library
+            2. Samples with Null values
+            3. Samples with less data than pass_window_size + prediction_length
+        Upon finding invalid samples, the function is run again, this time finding another random ticker.
         """
         sample = self.ticker_list().sample().values.flatten()[0]
-        try:
-            ticker = yf.Ticker(sample)
-            hist = ticker.history(period="max")
-            hist = hist.drop(columns=["Dividends", "Stock Splits"])
-            if hist.isnull().values.any():
-                raise ValueError("Null Values detected")
-        except:
-            [sampleTicker, sample] = self._choose_sample()
-        length = len(hist.index)
-        if length < self.past_window_size + self.prediction_length:
-            [sampleTicker, sample] = self._choose_sample()
-            return [sampleTicker, sample]
+        if self.random_dates_total_window is not None:
+            try:
+
+                ticker = yf.Ticker(sample)
+                hist = ticker.history(period="max")
+                hist = hist.drop(columns=["Dividends", "Stock Splits"])
+                if len(hist.index) < (self.random_dates_total_window + 30):
+                    raise ValueError(
+                        "Too little entries in this current ticker. Sampling another Ticker..."
+                    )
+            except:
+                [sampleTicker, sample] = self._choose_sample()
+            length = len(hist.index)
+            if length < self.past_window_size + self.prediction_length:
+                [sampleTicker, sample] = self._choose_sample()
+                return [sampleTicker, sample]
+            else:
+                choices = length - (self.past_window_size + self.prediction_length)
+                randomIndex = random.randint(0, choices)
+                return (
+                    sample,
+                    hist.iloc[
+                        randomIndex : randomIndex + self.random_dates_total_window
+                    ],
+                )
         else:
-            choices = length - (self.past_window_size + self.prediction_length)
-            randomIndex = random.randint(0, choices)
-            return sample, hist.iloc[randomIndex: randomIndex + 100]
+            try:
+                hist = yf.download(
+                    sample, start=self.fixed_dates_start, end=self.fixed_dates_end
+                )
+                if len(hist.index) == 0:
+                    raise ValueError("Failed Download, resampling...")
+                hist = hist.drop(columns=["Adj Close"])
+                return (sample, hist)
+            except:
+                [sampleTicker, sample] = self._choose_sample()
+                return (sampleTicker, sample)
 
     def _classify(self, preprocessed_data):
         """
-            Generate output classifiers for individual data.
+        Generate output classifiers for individual data.
         """
         close = preprocessed_data["Close"].to_numpy()
         high = preprocessed_data["High"].to_numpy()
@@ -266,7 +306,7 @@ class Generator:
             else:
                 pos -= 1
 
-        shaved_output = output[self.prediction_length: pos]
+        shaved_output = output[self.prediction_length : pos]
         return (
             shaved_output,
             (
@@ -299,24 +339,36 @@ class Generator:
             normalized_data = self._normalize_dataframe(processed_data)
             total_columns = len(normalized_data.columns)
             (output_data, shaved_rows) = self._classify(preprocessed_data)
-            input_data = self._initial_parameters(
-                normalized_data, total_columns)
-            input_data = input_data[self.past_window_size:]
+            input_data = self._initial_parameters(normalized_data, total_columns)
+            input_data = input_data[self.past_window_size :]
             input_data = input_data[: (len(input_data) - shaved_rows - 1)]
             if len(input_data) < len(output_data):
                 difference = len(output_data) - len(input_data)
                 output_data = output_data[difference:]
             for i in range(len(output_data)):
                 input_data[i].append(output_data[i])
-            df = pd.concat([df, pd.DataFrame(input_data)], ignore_index=True)
-        df = df.sample(frac=1).reset_index(drop=True)
-        return df
+            df = pd.concat([df, pd.DataFrame(input_data)])
+            df = df.sort_index()
+
+        if self.ordered_or_shuffled == "shuffled":
+            df = df.sample(frac=1).reset_index(drop=True)
+            return df
+        elif self.ordered_or_shuffled == "ordered":
+            return df
+        else:
+            raise ValueError(
+                "Supposed to be caught in init but... 'ordered_or_shuffled' must only contain 'ordered' or 'shuffled'"
+            )
 
 
 if __name__ == "__main__":
     trainingSet = Generator(
         "no_open",
         "no_close",
+        ordered_or_shuffled="ordered",
+        # random_dates_total_window=100,
+        fixed_dates_start="2017-01-01",
+        fixed_dates_end="2017-04-30",
         stoch={
             "primary_columns": ["high", "low", "close"],
             "output_columns": 2,
