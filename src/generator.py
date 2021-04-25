@@ -48,9 +48,12 @@ class Generator:
 
         Add kwargs in the form of:
         YOUR_INDICATOR_NAME={
-            "primary_columns": ["high", "low", "close"],    ## primary columns required to compute the indicator
-            "output_columns": 2,                            ## number of outputs that the indicator will provide
-            "period_list": [2, 3, 5],                       ## add any additional period params in order here
+            ## primary columns required to compute the indicator
+            "primary_columns": ["high", "low", "close"],
+            ## number of outputs that the indicator will provide
+            "output_columns": 2,
+            ## add any additional period params in order here
+            "period_list": [2, 3, 5],
         },
 
     Outputs:
@@ -73,9 +76,10 @@ class Generator:
         fixed_dates_end=None,
         **kwargs
     ):
+        # Error Catching
         if ordered_or_shuffled not in ["shuffled", "ordered"]:
             raise ValueError(
-                "invalid 'ordered_or_shuffled' parameter. Only 'ordered' or 'shuffled' are accepted."
+                "invalid entry 'ordered_or_shuffled' parameter. Only 'ordered' or 'shuffled' are accepted."
             )
         if past_window_size < 5:
             raise ValueError(
@@ -99,7 +103,8 @@ class Generator:
                     "total_window needs to be greater than past_window_size + prediction_length"
                 )
         if successful_trade_percent <= 0.0:
-            raise ValueError("successful_trade_percent cannot be 0 or negative")
+            raise ValueError(
+                "successful_trade_percent cannot be 0 or negative")
         if total_samples <= 0:
             raise ValueError("total_samples cannot be 0 or negative")
         self.ordered_or_shuffled = ordered_or_shuffled
@@ -127,14 +132,22 @@ class Generator:
         """
         dataframe = dataframe.astype("float64")
         # pylint: disable=unused-variable
-        open_list = dataframe["Open"].to_numpy()  # pylint: disable=unused-variable
-        high_list = dataframe["High"].to_numpy()  # pylint: disable=unused-variable
-        low_list = dataframe["Low"].to_numpy()  # pylint: disable=unused-variable
-        close_list = dataframe["Close"].to_numpy()  # pylint: disable=unused-variable
-        volume_list = dataframe["Volume"].to_numpy()  # pylint: disable=unused-variable
+        open_list = dataframe["Open"].to_numpy(
+        )  # pylint: disable=unused-variable
+        high_list = dataframe["High"].to_numpy(
+        )  # pylint: disable=unused-variable
+        low_list = dataframe["Low"].to_numpy(
+        )  # pylint: disable=unused-variable
+        close_list = dataframe["Close"].to_numpy(
+        )  # pylint: disable=unused-variable
+        volume_list = dataframe["Volume"].to_numpy(
+        )  # pylint: disable=unused-variable
         smallest_output = len(dataframe)
         extra_column_dict = {}
-
+        if (all(item in self.args for item in [
+                "no_open", "no_close", "no_high", "no_low", "no_volume"])) and not bool(self.kwargs):
+            raise ValueError(
+                "With all these input parameters, there will be no nothing to evaluate on. \n Either add indicators or do not remove all primary columns.")
         for item in self.args:
             if item == "no_open":
                 dataframe = dataframe.drop(columns="Open")
@@ -182,8 +195,10 @@ class Generator:
             else:
                 for i in range(value["output_columns"]):
                     if len(custom_output[i]) < len(dataframe):
-                        smallest_output = min(smallest_output, len(custom_output[i]))
-                    extra_column_dict[class_method.__name__ + str(i)] = custom_output[i]
+                        smallest_output = min(
+                            smallest_output, len(custom_output[i]))
+                    extra_column_dict[class_method.__name__ +
+                                      str(i)] = custom_output[i]
         difference = len(dataframe) - smallest_output
         dataframe = dataframe.iloc[difference:]
         with pd.option_context("mode.chained_assignment", None):
@@ -237,7 +252,7 @@ class Generator:
                 hist = ticker.history(period="max")
                 hist = hist.drop(columns=["Dividends", "Stock Splits"])
                 if len(hist.index) < (self.random_dates_total_window + 30):
-                    raise ValueError(
+                    raise RuntimeError(
                         "Too little entries in this current ticker. Sampling another Ticker..."
                     )
             except:
@@ -247,12 +262,13 @@ class Generator:
                 [sampleTicker, sample] = self._choose_sample()
                 return [sampleTicker, sample]
             else:
-                choices = length - (self.past_window_size + self.prediction_length)
+                choices = length - (self.past_window_size +
+                                    self.prediction_length)
                 randomIndex = random.randint(0, choices)
                 return (
                     sample,
                     hist.iloc[
-                        randomIndex : randomIndex + self.random_dates_total_window
+                        randomIndex: randomIndex + self.random_dates_total_window
                     ],
                 )
         else:
@@ -261,7 +277,7 @@ class Generator:
                     sample, start=self.fixed_dates_start, end=self.fixed_dates_end
                 )
                 if len(hist.index) == 0:
-                    raise ValueError("Failed Download, resampling...")
+                    raise RuntimeError("Failed Download, resampling...")
                 hist = hist.drop(columns=["Adj Close"])
                 return (sample, hist)
             except:
@@ -306,7 +322,7 @@ class Generator:
             else:
                 pos -= 1
 
-        shaved_output = output[self.prediction_length : pos]
+        shaved_output = output[self.prediction_length: pos]
         return (
             shaved_output,
             (
@@ -320,15 +336,15 @@ class Generator:
         output_list = [([0] * (self.past_window_size * column_count))] * len(
             time_series
         )
-        for i in range(len(time_series)):
-            if i >= self.past_window_size:
+        for current_TS_position in range(len(time_series)):
+            if current_TS_position >= self.past_window_size:
                 initialize = [0] * (self.past_window_size * column_count)
-                for j in range(column_count):
-                    for k in range(self.past_window_size):
-                        initialize[j * self.past_window_size + k] = time_series.iloc[
-                            i - j - 1
-                        ][k]
-                output_list[i] = initialize
+                for column_index in range(column_count):
+                    for t_minus_n in range(self.past_window_size):
+                        initialize[column_index * self.past_window_size + t_minus_n] = time_series.iloc[
+                            current_TS_position - t_minus_n - 1
+                        ][column_index]
+                output_list[current_TS_position] = initialize
         return output_list
 
     def generate(self):
@@ -339,8 +355,9 @@ class Generator:
             normalized_data = self._normalize_dataframe(processed_data)
             total_columns = len(normalized_data.columns)
             (output_data, shaved_rows) = self._classify(preprocessed_data)
-            input_data = self._initial_parameters(normalized_data, total_columns)
-            input_data = input_data[self.past_window_size :]
+            input_data = self._initial_parameters(
+                normalized_data, total_columns)
+            input_data = input_data[self.past_window_size:]
             input_data = input_data[: (len(input_data) - shaved_rows - 1)]
             if len(input_data) < len(output_data):
                 difference = len(output_data) - len(input_data)
@@ -356,7 +373,7 @@ class Generator:
         elif self.ordered_or_shuffled == "ordered":
             return df
         else:
-            raise ValueError(
+            raise RuntimeError(
                 "Supposed to be caught in init but... 'ordered_or_shuffled' must only contain 'ordered' or 'shuffled'"
             )
 
@@ -365,20 +382,23 @@ if __name__ == "__main__":
     trainingSet = Generator(
         "no_open",
         "no_close",
+        "no_high",
+        "no_volume",
+        "no_low",
         ordered_or_shuffled="ordered",
         # random_dates_total_window=100,
         fixed_dates_start="2017-01-01",
         fixed_dates_end="2017-04-30",
-        stoch={
-            "primary_columns": ["high", "low", "close"],
-            "output_columns": 2,
-            "period_list": [2, 3, 5],
-        },
-        di={
-            "primary_columns": ["high", "low", "close"],
-            "output_columns": 2,
-            "period_list": [5],
-        },
+        # stoch={
+        #     "primary_columns": ["high", "low", "close"],
+        #     "output_columns": 2,
+        #     "period_list": [2, 3, 5],
+        # },
+        # di={
+        #     "primary_columns": ["high", "low", "close"],
+        #     "output_columns": 2,
+        #     "period_list": [5],
+        # },
     )
 
     output_data_frame = trainingSet.generate()
