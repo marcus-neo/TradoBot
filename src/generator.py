@@ -3,9 +3,7 @@ import yfinance as yf
 import numpy as np
 import tulipy as ti
 from sklearn import preprocessing
-import argparse
 import random
-import datetime
 
 
 class Generator:
@@ -379,12 +377,12 @@ class Generator:
 
 
 if __name__ == "__main__":
-    trainingSet = Generator(
+    output_data_frame = Generator(
         "no_open",
-        "no_close",
-        "no_high",
-        "no_volume",
-        "no_low",
+        # "no_close",
+        # "no_high",
+        # "no_volume",
+        # "no_low",
         ordered_or_shuffled="ordered",
         # random_dates_total_window=100,
         fixed_dates_start="2017-01-01",
@@ -399,7 +397,6 @@ if __name__ == "__main__":
         #     "output_columns": 2,
         #     "period_list": [5],
         # },
-    )
+    ).generate()
 
-    output_data_frame = trainingSet.generate()
     output_data_frame.to_csv("sampleTrain.csv", index=False, header=False)
