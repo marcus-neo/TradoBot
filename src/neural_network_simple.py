@@ -8,34 +8,54 @@ from keras.layers import Dropout
 
 # load the dataset
 dataset = loadtxt('csv_files/nn_input.csv', delimiter=',')
-# split into input (x) and output (y) variables
-x = dataset[:,0:25]
-y = dataset[:,25]
 
-y = np_utils.to_categorical(y, 3)
+# split into input (x) and output (y) variables
+# training-validation split taken as 80:20
+num_classes = 3
+split = 0.8
+num_epochs = 200
+input_batch_size = 10
+first_dense = 64
+num_dense_layers = 3 #excluding final dense(3) layer for classification
+dropout_rate = 0.5
+include_batch_norm = True
+include_early_stop = False
+
+validation_index = int(split*dataset.shape[0])
+
+x_train = dataset[0:validation_index, 0:-1]
+y_train = dataset[0:validation_index, -1]
+y_train = np_utils.to_categorical(y_train, num_classes)
+
+x_test = dataset[validation_index:, 0:-1]
+y_test = dataset[validation_index:, -1]
+y_test = np_utils.to_categorical(y_test, num_classes)
+
+num_neurons = first_dense # x2 neurons each subsequent layer
 
 model = Sequential()
-model.add(Dense(64, input_dim=25, activation='relu'))
-model.add(BatchNormalization())
-model.add(Dropout(0.3))
-model.add(Dense(128, activation='relu'))
-model.add(BatchNormalization())
-model.add(Dropout(0.3))
-model.add(Dense(256, activation='relu'))
-model.add(BatchNormalization())
-model.add(Dropout(0.3))
-model.add(Dense(3, activation='softmax'))
+for i in range(num_dense_layers):
+    model.add(Dense(num_neurons, input_dim=x_train.shape[1], activation='relu'))
+    if(include_batch_norm):
+        model.add(BatchNormalization())
+    model.add(Dropout(dropout_rate))
+    num_neurons = num_neurons*2
+
+model.add(Dense(num_classes, activation='softmax'))
 
 model.summary()
 
 # compile the keras model
-#early_stop = EarlyStopping(monitor='accuracy', min_delta=0, patience=10, verbose=0, mode='auto', baseline=None, restore_best_weights=True)
+if(include_early_stop):
+    early_stop = EarlyStopping(monitor='accuracy', min_delta=0, patience=10, verbose=0, mode='auto', baseline=None, restore_best_weights=True)
 
 model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
 
 # fit the keras model on the dataset
-model.fit(x, y, epochs=200, batch_size=10)
+model.fit(x_train, y_train, epochs=num_epochs, batch_size=input_batch_size)
 
 # evaluate the keras model
-_, accuracy = model.evaluate(x, y)
-print('Accuracy: %.2f%%' % (accuracy*100))
+_, train_accuracy = model.evaluate(x_train, y_train)
+_, test_accuracy = model.evaluate(x_test, y_test)
+print('Train Accuracy: %.2f%%' % (train_accuracy*100))
+print('Test Accuracy: %.2f%%' % (test_accuracy*100))
