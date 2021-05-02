@@ -1,4 +1,5 @@
 
 .vscode/settings.json
+src/__pycache__
 src/sampleTrain.csv
 indicator_combinations.txt
