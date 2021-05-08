@@ -49,11 +49,6 @@ class indicator_dict:
                 "output_columns": 1,
                 "period_list": [2, 5],
             },
-            "apoVOLUME": {
-                "primary_columns": ["volume"],
-                "output_columns": 1,
-                "period_list": [2, 5],
-            },
             "aroon": {
                 "primary_columns": ["high", "low"],
                 "output_columns": 2,
@@ -98,11 +93,6 @@ class indicator_dict:
                 "output_columns": 1,
                 "period_list": [5],
             },
-            "cmoVOLUME": {
-                "primary_columns": ["volume"],
-                "output_columns": 1,
-                "period_list": [5],
-            },
             "cvi": {
                 "primary_columns": ["high", "low"],
                 "output_columns": 1,
@@ -135,11 +125,6 @@ class indicator_dict:
             },
             "dpoCLOSE": {
                 "primary_columns": ["close"],
-                "output_columns": 1,
-                "period_list": [5],
-            },
-            "dpoVOLUME": {
-                "primary_columns": ["volume"],
                 "output_columns": 1,
                 "period_list": [5],
             },
@@ -177,8 +162,8 @@ class indicator_dict:
                 "output_columns": 1,
                 "period_list": [5],
             },
-            "foscVOLUME": {
-                "primary_columns": ["volume"],
+            "fosc": {
+                "primary_columns": ["close"],
                 "output_columns": 1,
                 "period_list": [5],
             },
@@ -207,11 +192,6 @@ class indicator_dict:
                 "output_columns": 1,
                 "period_list": [5],
             },
-            "linreginterceptVOLUME": {
-                "primary_columns": ["volume"],
-                "output_columns": 1,
-                "period_list": [5],
-            },
             "linregslopeOPEN": {
                 "primary_columns": ["open"],
                 "output_columns": 1,
@@ -232,11 +212,6 @@ class indicator_dict:
                 "output_columns": 1,
                 "period_list": [5],
             },
-            "linregslopeVOLUME": {
-                "primary_columns": ["volume"],
-                "output_columns": 1,
-                "period_list": [5],
-            },
             "macdOPEN": {
                 "primary_columns": ["open"],
                 "output_columns": 3,
@@ -254,11 +229,6 @@ class indicator_dict:
             },
             "macdCLOSE": {
                 "primary_columns": ["close"],
-                "output_columns": 3,
-                "period_list": [2, 5, 9],
-            },
-            "macdVOLUME": {
-                "primary_columns": ["volume"],
                 "output_columns": 3,
                 "period_list": [2, 5, 9],
             },
@@ -296,11 +266,6 @@ class indicator_dict:
                 "output_columns": 1,
                 "period_list": [5],
             },
-            "momVOLUME": {
-                "primary_columns": ["volume"],
-                "output_columns": 1,
-                "period_list": [5],
-            },
             "mswOPEN": {
                 "primary_columns": ["open"],
                 "output_columns": 2,
@@ -318,11 +283,6 @@ class indicator_dict:
             },
             "mswCLOSE": {
                 "primary_columns": ["close"],
-                "output_columns": 2,
-                "period_list": [5],
-            },
-            "mswVOLUME": {
-                "primary_columns": ["volume"],
                 "output_columns": 2,
                 "period_list": [5],
             },
@@ -359,11 +319,6 @@ class indicator_dict:
                 "output_columns": 1,
                 "period_list": [2, 5],
             },
-            "ppoVOLUME": {
-                "primary_columns": ["volume"],
-                "output_columns": 1,
-                "period_list": [2, 5],
-            },
             "pvi": {
                 "primary_columns": ["close", "volume"],
                 "output_columns": 1,
@@ -393,11 +348,6 @@ class indicator_dict:
                 "output_columns": 1,
                 "period_list": [5],
             },
-            "rocVOLUME": {
-                "primary_columns": ["volume"],
-                "output_columns": 1,
-                "period_list": [5],
-            },
             "rocrOPEN": {
                 "primary_columns": ["open"],
                 "output_columns": 1,
@@ -418,11 +368,6 @@ class indicator_dict:
                 "output_columns": 1,
                 "period_list": [5],
             },
-            "rocrVOLUME": {
-                "primary_columns": ["volume"],
-                "output_columns": 1,
-                "period_list": [5],
-            },
             "rsiOPEN": {
                 "primary_columns": ["open"],
                 "output_columns": 1,
@@ -440,11 +385,6 @@ class indicator_dict:
             },
             "rsiCLOSE": {
                 "primary_columns": ["close"],
-                "output_columns": 1,
-                "period_list": [5],
-            },
-            "rsiVOLUME": {
-                "primary_columns": ["volume"],
                 "output_columns": 1,
                 "period_list": [5],
             },
@@ -473,11 +413,6 @@ class indicator_dict:
                 "output_columns": 1,
                 "period_list": [5],
             },
-            "stochrsiVOLUME": {
-                "primary_columns": ["volume"],
-                "output_columns": 1,
-                "period_list": [5],
-            },
             "tr": {
                 "primary_columns": ["high", "low", "close"],
                 "output_columns": 1,
@@ -499,11 +434,6 @@ class indicator_dict:
             },
             "trixCLOSE": {
                 "primary_columns": ["close"],
-                "output_columns": 1,
-                "period_list": [5],
-            },
-            "trixVOLUME": {
-                "primary_columns": ["volume"],
                 "output_columns": 1,
                 "period_list": [5],
             },
@@ -529,11 +459,6 @@ class indicator_dict:
             },
             "volatilityCLOSE": {
                 "primary_columns": ["close"],
-                "output_columns": 1,
-                "period_list": [5],
-            },
-            "volatilityVOLUME": {
-                "primary_columns": ["volume"],
                 "output_columns": 1,
                 "period_list": [5],
             },
@@ -566,10 +491,10 @@ class indicator_dict:
 
 if __name__ == "__main__":
     ind_dic = indicator_dict()
-    # ind_dic.get_permutations()
-    with open("indicator_combinations.txt", "r") as fd:
-        lines = fd.readlines()
-        for line in lines:
-            indicator_lst = ast.literal_eval(line)
-            for indicator in indicator_lst:
-                print(ind_dic.get_params(indicator))
+    ind_dic.get_permutations()
+    # with open("indicator_combinations.txt", "r") as fd:
+    #     lines = fd.readlines()
+    #     for line in lines:
+    #         indicator_lst = ast.literal_eval(line)
+    #         for indicator in indicator_lst:
+    #             print(ind_dic.get_params(indicator))

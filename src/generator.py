@@ -66,8 +66,8 @@ class Generator:
         ordered_or_shuffled="ordered",
         past_window_size=5,
         prediction_length=5,
-        successful_trade_percent=15.0,
-        total_samples=2,
+        successful_trade_percent=5.0,
+        total_samples=100,
         ticker_list_directory="../StockTickers/TickerNames.csv",
         random_dates_total_window=None,
         fixed_dates_start=None,
@@ -101,7 +101,8 @@ class Generator:
                     "total_window needs to be greater than past_window_size + prediction_length"
                 )
         if successful_trade_percent <= 0.0:
-            raise ValueError("successful_trade_percent cannot be 0 or negative")
+            raise ValueError(
+                "successful_trade_percent cannot be 0 or negative")
         if total_samples <= 0:
             raise ValueError("total_samples cannot be 0 or negative")
         self.ordered_or_shuffled = ordered_or_shuffled
@@ -129,11 +130,16 @@ class Generator:
         """
         dataframe = dataframe.astype("float64")
         # pylint: disable=unused-variable
-        open_list = dataframe["Open"].to_numpy()  # pylint: disable=unused-variable
-        high_list = dataframe["High"].to_numpy()  # pylint: disable=unused-variable
-        low_list = dataframe["Low"].to_numpy()  # pylint: disable=unused-variable
-        close_list = dataframe["Close"].to_numpy()  # pylint: disable=unused-variable
-        volume_list = dataframe["Volume"].to_numpy()  # pylint: disable=unused-variable
+        open_list = dataframe["Open"].to_numpy(
+        )  # pylint: disable=unused-variable
+        high_list = dataframe["High"].to_numpy(
+        )  # pylint: disable=unused-variable
+        low_list = dataframe["Low"].to_numpy(
+        )  # pylint: disable=unused-variable
+        close_list = dataframe["Close"].to_numpy(
+        )  # pylint: disable=unused-variable
+        volume_list = dataframe["Volume"].to_numpy(
+        )  # pylint: disable=unused-variable
         smallest_output = len(dataframe)
         extra_column_dict = {}
         if (
@@ -182,7 +188,7 @@ class Generator:
             if "period_list" in value:
                 for i in range(len(value["period_list"])):
                     param += ", " + str(value["period_list"][i])
-
+            key = ''.join(ch for ch in key if not ch.isupper())
             class_method = getattr(ti, key)
             custom_output = eval("class_method" + "(" + param + ")")
             if not isinstance(custom_output, tuple):
@@ -192,8 +198,10 @@ class Generator:
             else:
                 for i in range(value["output_columns"]):
                     if len(custom_output[i]) < len(dataframe):
-                        smallest_output = min(smallest_output, len(custom_output[i]))
-                    extra_column_dict[class_method.__name__ + str(i)] = custom_output[i]
+                        smallest_output = min(
+                            smallest_output, len(custom_output[i]))
+                    extra_column_dict[class_method.__name__ +
+                                      str(i)] = custom_output[i]
         difference = len(dataframe) - smallest_output
         dataframe = dataframe.iloc[difference:]
         with pd.option_context("mode.chained_assignment", None):
@@ -257,12 +265,13 @@ class Generator:
                 [sampleTicker, sample] = self._choose_sample()
                 return [sampleTicker, sample]
             else:
-                choices = length - (self.past_window_size + self.prediction_length)
+                choices = length - (self.past_window_size +
+                                    self.prediction_length)
                 randomIndex = random.randint(0, choices)
                 return (
                     sample,
                     hist.iloc[
-                        randomIndex : randomIndex + self.random_dates_total_window
+                        randomIndex: randomIndex + self.random_dates_total_window
                     ],
                 )
         else:
@@ -316,7 +325,7 @@ class Generator:
             else:
                 pos -= 1
 
-        shaved_output = output[self.prediction_length : pos]
+        shaved_output = output[self.prediction_length: pos]
         return (
             shaved_output,
             (
@@ -345,28 +354,38 @@ class Generator:
 
     def generate(self):
         df = pd.DataFrame()
-        for _ in range(self.total_samples):
-            _, preprocessed_data = self._choose_sample()
-            processed_data = self._custom_arguments(preprocessed_data)
-            normalized_data = self._normalize_dataframe(processed_data)
-            total_columns = len(normalized_data.columns)
-            (output_data, shaved_rows) = self._classify(preprocessed_data)
-            input_data = self._initial_parameters(normalized_data, total_columns)
-            input_data = input_data[self.past_window_size :]
-            input_data = input_data[: (len(input_data) - shaved_rows - 1)]
-            if len(input_data) < len(output_data):
-                difference = len(output_data) - len(input_data)
-                output_data = output_data[difference:]
-            for i in range(len(output_data)):
-                input_data[i].append(output_data[i])
-            df = pd.concat([df, pd.DataFrame(input_data)])
-            df = df.sort_index()
+        for counter in range(self.total_samples):
+            sample_ticker, preprocessed_data = self._choose_sample()
+            print("sample number " + str(counter))
+            try:
+                processed_data = self._custom_arguments(preprocessed_data)
+                normalized_data = self._normalize_dataframe(processed_data)
+                total_columns = len(normalized_data.columns)
+                (output_data, shaved_rows) = self._classify(preprocessed_data)
+                input_data = self._initial_parameters(
+                    normalized_data, total_columns)
+                input_data = input_data[self.past_window_size:]
+                input_data = input_data[: (len(input_data) - shaved_rows)]
+                if len(input_data) < len(output_data):
+                    difference = len(output_data) - len(input_data)
+                    output_data = output_data[difference:]
+                elif len(output_data) < len(input_data):
+                    difference = len(input_data) - len(output_data)
+                    input_data = input_data[:(len(output_data))]
+                for i in range(len(output_data)):
+                    input_data[i].append(output_data[i])
+                df = pd.concat([df, pd.DataFrame(input_data)])
+                df = df.sort_index()
+            except ValueError as e:
+                print(str(e))
+                print("ticker: ", sample_ticker)
+                counter -= 1
 
         if self.ordered_or_shuffled == "shuffled":
             df = df.sample(frac=1).reset_index(drop=True)
-            return df
+            return df.fillna(0)
         elif self.ordered_or_shuffled == "ordered":
-            return df
+            return df.fillna(0)
         else:
             raise RuntimeError(
                 "Supposed to be caught in init but... 'ordered_or_shuffled' must only contain 'ordered' or 'shuffled'"
@@ -375,15 +394,20 @@ class Generator:
 
 if __name__ == "__main__":
     output_data_frame = Generator(
-        "no_open",
+        # "no_open",
         # "no_close",
         # "no_high",
         # "no_volume",
         # "no_low",
-        ordered_or_shuffled="ordered",
-        # random_dates_total_window=100,
-        fixed_dates_start="2017-01-01",
-        fixed_dates_end="2017-04-30",
+        ordered_or_shuffled="shuffled",
+        random_dates_total_window=100,
+        adosc={
+            "primary_columns": ["high", "low", "close", "volume"],
+            "output_columns": 1,
+            "period_list": [2, 5],
+        },
+        # fixed_dates_start="2017-01-01",
+        # fixed_dates_end="2017-04-30",
         # stoch={
         #     "primary_columns": ["high", "low", "close"],
         #     "output_columns": 2,
