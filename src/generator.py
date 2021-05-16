@@ -261,6 +261,14 @@ class Generator:
         df = df.sort_index()
         return df
 
+    def max_indicator_length(self):
+        max_length = 0
+        for _, indicator_params in self.kwargs:
+            if "period_list" in indicator_params:
+                max_length = max(max_length, max(
+                    indicator_params["period_list"]))
+        return max_length
+
 
 class GenerateRealtime(Generator):
     def __init__(
@@ -286,9 +294,9 @@ class GenerateRealtime(Generator):
         self.prediction_length = prediction_length
         self.successful_trade_percent = 0.01 * successful_trade_percent
         self.ticker_name = ticker_name
-        self.total_window = past_window_size + 50
         self.args = args
         self.kwargs = kwargs.items()
+        self.total_window = past_window_size + self.max_indicator_length() + 1
 
     def _choose_sample(self):
         start_date = date.today()-timedelta(days=int(self.total_window/5*7))
@@ -339,21 +347,6 @@ class GenerateTrain(Generator):
             )
         if prediction_length < 1:
             raise ValueError("prediction_length cannot be 0 or negative.")
-        if random_dates_total_window is None:
-            if fixed_dates_end == None and fixed_dates_start == None:
-                raise ValueError(
-                    "either random_dates_total_window or fix_dates input has to have a value"
-                )
-            elif fixed_dates_end == None:
-                raise ValueError("fixed_dates_end needs to be filled in")
-            elif fixed_dates_start == None:
-                raise ValueError("fixed_dates_start needs to be filled in")
-
-        elif not random_dates_total_window is None:
-            if random_dates_total_window < past_window_size + prediction_length:
-                raise ValueError(
-                    "total_window needs to be greater than past_window_size + prediction_length"
-                )
         if successful_trade_percent <= 0.0:
             raise ValueError(
                 "successful_trade_percent cannot be 0 or negative")
@@ -370,6 +363,29 @@ class GenerateTrain(Generator):
         self.total_samples = total_samples
         self.args = args
         self.kwargs = kwargs.items()
+        if random_dates_total_window is None:
+            if fixed_dates_end == None and fixed_dates_start == None:
+                raise ValueError(
+                    "either random_dates_total_window or fix_dates input has to have a value"
+                )
+            elif fixed_dates_end == None:
+                raise ValueError("fixed_dates_end needs to be filled in")
+            elif fixed_dates_start == None:
+                raise ValueError("fixed_dates_start needs to be filled in")
+            else:
+                end_datetime = datetime.strptime(fixed_dates_end, "%Y-%m-%d")
+                start_datetime = datetime.strptime(
+                    fixed_dates_start, "%Y-%m-%d")
+                if int((end_ddatetime-start_datetime).days/7*5) < self.max_indicator_length + past_window_size + prediction_length + 1:
+                    raise ValueError(
+                        "too small time difference between startdate and enddate."
+                    )
+
+        elif not random_dates_total_window is None:
+            if random_dates_total_window < self.max_indicator_length() + past_window_size + prediction_length + 1:
+                raise ValueError(
+                    "total_window needs to be greater than past_window_size + prediction_length + the highest window size of the indicators"
+                )
 
     def ticker_list(self):
         """
@@ -452,40 +468,15 @@ class GenerateTrain(Generator):
 
 
 if __name__ == "__main__":
-    # output_data_frame = GenerateTrain(
-    #     # "no_open",
-    #     # "no_close",
-    #     # "no_high",
-    #     # "no_volume",
-    #     # "no_low",
-    #     ordered_or_shuffled="shuffled",
-    #     random_dates_total_window=100,
-    #     total_samples=1,
-    #     adosc={
-    #         "primary_columns": ["high", "low", "close", "volume"],
-    #         "output_columns": 1,
-    #         "period_list": [2, 5],
-    #     },
-    #     # fixed_dates_start="2017-01-01",
-    #     # fixed_dates_end="2017-04-30",
-    #     # stoch={
-    #     #     "primary_columns": ["high", "low", "close"],
-    #     #     "output_columns": 2,
-    #     #     "period_list": [2, 3, 5],
-    #     # },
-    #     # di={
-    #     #     "primary_columns": ["high", "low", "close"],
-    #     #     "output_columns": 2,
-    #     #     "period_list": [5],
-    #     # },
-    # ).generate()
-
-    output_data_frame2 = GenerateRealtime(
+    output_data_frame1 = GenerateTrain(
         # "no_open",
         # "no_close",
         # "no_high",
         # "no_volume",
         # "no_low",
+        ordered_or_shuffled="shuffled",
+        random_dates_total_window=100,
+        total_samples=1,
         adosc={
             "primary_columns": ["high", "low", "close", "volume"],
             "output_columns": 1,
@@ -505,4 +496,29 @@ if __name__ == "__main__":
         # },
     ).generate()
 
-    output_data_frame2.to_csv("sampleTrain2.csv", index=False, header=False)
+    # output_data_frame2 = GenerateRealtime(
+    #     # "no_open",
+    #     # "no_close",
+    #     # "no_high",
+    #     # "no_volume",
+    #     # "no_low",
+    #     adosc={
+    #         "primary_columns": ["high", "low", "close", "volume"],
+    #         "output_columns": 1,
+    #         "period_list": [2, 5],
+    #     },
+    #     # fixed_dates_start="2017-01-01",
+    #     # fixed_dates_end="2017-04-30",
+    #     # stoch={
+    #     #     "primary_columns": ["high", "low", "close"],
+    #     #     "output_columns": 2,
+    #     #     "period_list": [2, 3, 5],
+    #     # },
+    #     # di={
+    #     #     "primary_columns": ["high", "low", "close"],
+    #     #     "output_columns": 2,
+    #     #     "period_list": [5],
+    #     # },
+    # ).generate()
+
+    output_data_frame1.to_csv("sampleTrain2.csv", index=False, header=False)
