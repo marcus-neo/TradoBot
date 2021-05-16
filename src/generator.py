@@ -4,6 +4,7 @@ import numpy as np
 import tulipy as ti
 from sklearn import preprocessing
 import random
+from datetime import date, timedelta
 
 
 class Generator:
@@ -59,63 +60,6 @@ class Generator:
 
 
     """
-
-    def __init__(
-        self,
-        *args,
-        ordered_or_shuffled="ordered",
-        past_window_size=5,
-        prediction_length=5,
-        successful_trade_percent=5.0,
-        total_samples=200,
-        ticker_list_directory="../StockTickers/TickerNames.csv",
-        random_dates_total_window=None,
-        fixed_dates_start=None,
-        fixed_dates_end=None,
-        **kwargs
-    ):
-        # Error Catching
-        if ordered_or_shuffled not in ["shuffled", "ordered"]:
-            raise ValueError(
-                "invalid entry 'ordered_or_shuffled' parameter. Only 'ordered' or 'shuffled' are accepted."
-            )
-        if past_window_size < 5:
-            raise ValueError(
-                "past_window_size is currently < 5, but is required to be >= 5"
-            )
-        if prediction_length < 1:
-            raise ValueError("prediction_length cannot be 0 or negative.")
-        if random_dates_total_window is None:
-            if fixed_dates_end == None and fixed_dates_start == None:
-                raise ValueError(
-                    "either random_dates_total_window or fix_dates input has to have a value"
-                )
-            elif fixed_dates_end == None:
-                raise ValueError("fixed_dates_end needs to be filled in")
-            elif fixed_dates_start == None:
-                raise ValueError("fixed_dates_start needs to be filled in")
-
-        elif not random_dates_total_window is None:
-            if random_dates_total_window < past_window_size + prediction_length:
-                raise ValueError(
-                    "total_window needs to be greater than past_window_size + prediction_length"
-                )
-        if successful_trade_percent <= 0.0:
-            raise ValueError(
-                "successful_trade_percent cannot be 0 or negative")
-        if total_samples <= 0:
-            raise ValueError("total_samples cannot be 0 or negative")
-        self.ordered_or_shuffled = ordered_or_shuffled
-        self.past_window_size = past_window_size
-        self.prediction_length = prediction_length
-        self.random_dates_total_window = random_dates_total_window
-        self.fixed_dates_start = fixed_dates_start
-        self.fixed_dates_end = fixed_dates_end
-        self.successful_trade_percent = 0.01 * successful_trade_percent
-        self.ticker_list_directory = ticker_list_directory
-        self.total_samples = total_samples
-        self.args = args
-        self.kwargs = kwargs.items()
 
     def _custom_arguments(self, dataframe):
         """
@@ -214,12 +158,6 @@ class Generator:
                     dataframe[key] = value
         return dataframe
 
-    def ticker_list(self):
-        """
-        Reads the csv file from the class attribute ticker_list_directory, and returns a pandas dataframe
-        """
-        return pd.read_csv(self.ticker_list_directory, header=None)
-
     def _normalize_dataframe(self, dataframe):
         """
         Normalizes all columns in the dataframe (normalised with respect to only data within the column)
@@ -237,57 +175,6 @@ class Generator:
             scaled_vals, columns=dataframe.columns, index=dataframe.index
         )
         return dataframe
-
-    def _choose_sample(self):
-        """
-        Choose valid sample provided by the function ticker_list.
-        Examples of invalid samples are:
-            1. Samples with error outputs by yfinance library
-            2. Samples with Null values
-            3. Samples with less data than pass_window_size + prediction_length
-        Upon finding invalid samples, the function is run again, this time finding another random ticker.
-        """
-        sample = self.ticker_list().sample().values.flatten()[0]
-        if self.random_dates_total_window is not None:
-            try:
-
-                ticker = yf.Ticker(sample)
-                hist = ticker.history(period="max")
-                hist = hist.drop(columns=["Dividends", "Stock Splits"])
-                if len(hist.index) < (self.random_dates_total_window + 30):
-                    raise RuntimeError(
-                        "Too little entries in this current ticker. Sampling another Ticker..."
-                    )
-            except:
-                [sampleTicker, sample] = self._choose_sample()
-            length = len(hist.index)
-            if length < self.past_window_size + self.prediction_length:
-                [sampleTicker, sample] = self._choose_sample()
-                return [sampleTicker, sample]
-            else:
-                choices = length - (self.past_window_size +
-                                    self.prediction_length)
-                randomIndex = random.randint(0, choices)
-                return (
-                    sample,
-                    hist.iloc[
-                        randomIndex: randomIndex + self.random_dates_total_window
-                    ],
-                )
-        else:
-            try:
-                hist = yf.download(
-                    sample, start=self.fixed_dates_start, end=self.fixed_dates_end
-                )
-                if len(hist.index) == 0:
-                    raise RuntimeError("Failed Download, resampling...")
-                if hist.isnull().values.any():
-                    raise RuntimeError("NaN values identified. resampling...")
-                hist = hist.drop(columns=["Adj Close"])
-                return (sample, hist)
-            except:
-                [sampleTicker, sample] = self._choose_sample()
-                return (sampleTicker, sample)
 
     def _classify(self, preprocessed_data):
         """
@@ -354,29 +241,200 @@ class Generator:
                 output_list[current_TS_position] = initialize
         return output_list
 
+    def create_df(self, preprocessed_data, df):
+        processed_data = self._custom_arguments(preprocessed_data)
+        normalized_data = self._normalize_dataframe(processed_data)
+        total_columns = len(normalized_data.columns)
+        (output_data, shaved_rows) = self._classify(preprocessed_data)
+        input_data = self._initial_parameters(
+            normalized_data, total_columns)
+        input_data = input_data[self.past_window_size:]
+        input_data = input_data[: (len(input_data) - shaved_rows)]
+        if len(input_data) < len(output_data):
+            difference = len(output_data) - len(input_data)
+            output_data = output_data[difference:]
+        # elif len(output_data) < len(input_data):
+        #     input_data = input_data[:(len(output_data))]
+        for i in range(len(output_data)):
+            input_data[i].append(output_data[i])
+        df = pd.concat([df, pd.DataFrame(input_data)])
+        df = df.sort_index()
+        return df
+
+
+class GenerateRealtime(Generator):
+    def __init__(
+        self,
+        *args,
+        past_window_size=5,
+        prediction_length=5,
+        successful_trade_percent=5.0,
+        ticker_name="AAPL",
+        **kwargs
+    ):
+        # Error Catching
+        if past_window_size < 5:
+            raise ValueError(
+                "past_window_size is currently < 5, but is required to be >= 5"
+            )
+        if prediction_length < 1:
+            raise ValueError("prediction_length cannot be 0 or negative.")
+        if successful_trade_percent <= 0.0:
+            raise ValueError(
+                "successful_trade_percent cannot be 0 or negative")
+        self.past_window_size = past_window_size
+        self.prediction_length = prediction_length
+        self.successful_trade_percent = 0.01 * successful_trade_percent
+        self.ticker_name = ticker_name
+        self.total_window = past_window_size + 50
+        self.args = args
+        self.kwargs = kwargs.items()
+
+    def _choose_sample(self):
+        start_date = date.today()-timedelta(days=int(self.total_window/5*7))
+        hist = yf.download(
+            self.ticker_name, start=start_date, end=date.today()
+        )
+        if len(hist.index) == 0:
+            raise RuntimeError("Failed Download, empty dataset")
+        if hist.isnull().values.any():
+            raise RuntimeError("Failed Download, NaN values identified.")
+        hist = hist.drop(columns=["Adj Close"])
+        return (self.ticker_name, hist)
+
+    def generate(self):
+        df = pd.DataFrame()
+        ticker, preprocessed_data = self._choose_sample()
+        try:
+            df = self.create_df(preprocessed_data, df)
+        except ValueError as e:
+            print(str(e))
+            print("ticker: ", ticker)
+        return df.fillna(0)
+
+
+class GenerateTrain(Generator):
+    def __init__(
+        self,
+        *args,
+        ordered_or_shuffled="ordered",
+        past_window_size=5,
+        prediction_length=5,
+        successful_trade_percent=5.0,
+        total_samples=200,
+        ticker_list_directory="../StockTickers/TickerNames.csv",
+        random_dates_total_window=None,
+        fixed_dates_start=None,
+        fixed_dates_end=None,
+        **kwargs
+    ):
+        # Error Catching
+        if ordered_or_shuffled not in ["shuffled", "ordered"]:
+            raise ValueError(
+                "invalid entry 'ordered_or_shuffled' parameter. Only 'ordered' or 'shuffled' are accepted."
+            )
+        if past_window_size < 5:
+            raise ValueError(
+                "past_window_size is currently < 5, but is required to be >= 5"
+            )
+        if prediction_length < 1:
+            raise ValueError("prediction_length cannot be 0 or negative.")
+        if random_dates_total_window is None:
+            if fixed_dates_end == None and fixed_dates_start == None:
+                raise ValueError(
+                    "either random_dates_total_window or fix_dates input has to have a value"
+                )
+            elif fixed_dates_end == None:
+                raise ValueError("fixed_dates_end needs to be filled in")
+            elif fixed_dates_start == None:
+                raise ValueError("fixed_dates_start needs to be filled in")
+
+        elif not random_dates_total_window is None:
+            if random_dates_total_window < past_window_size + prediction_length:
+                raise ValueError(
+                    "total_window needs to be greater than past_window_size + prediction_length"
+                )
+        if successful_trade_percent <= 0.0:
+            raise ValueError(
+                "successful_trade_percent cannot be 0 or negative")
+        if total_samples <= 0:
+            raise ValueError("total_samples cannot be 0 or negative")
+        self.ordered_or_shuffled = ordered_or_shuffled
+        self.past_window_size = past_window_size
+        self.prediction_length = prediction_length
+        self.random_dates_total_window = random_dates_total_window
+        self.fixed_dates_start = fixed_dates_start
+        self.fixed_dates_end = fixed_dates_end
+        self.successful_trade_percent = 0.01 * successful_trade_percent
+        self.ticker_list_directory = ticker_list_directory
+        self.total_samples = total_samples
+        self.args = args
+        self.kwargs = kwargs.items()
+
+    def ticker_list(self):
+        """
+        Reads the csv file from the class attribute ticker_list_directory, and returns a pandas dataframe
+        """
+        return pd.read_csv(self.ticker_list_directory, header=None)
+
+    def _choose_random_sample(self):
+        """
+        Choose valid sample provided by the function ticker_list.
+        Examples of invalid samples are:
+            1. Samples with error outputs by yfinance library
+            2. Samples with Null values
+            3. Samples with less data than pass_window_size + prediction_length
+        Upon finding invalid samples, the function is run again, this time finding another random ticker.
+        """
+        sample = self.ticker_list().sample().values.flatten()[0]
+        if self.random_dates_total_window is not None:
+            try:
+
+                ticker = yf.Ticker(sample)
+                hist = ticker.history(period="max")
+                hist = hist.drop(columns=["Dividends", "Stock Splits"])
+                if len(hist.index) < (self.random_dates_total_window + 30):
+                    raise RuntimeError(
+                        "Too little entries in this current ticker. Sampling another Ticker..."
+                    )
+            except:
+                [sampleTicker, sample] = self._choose_random_sample()
+            length = len(hist.index)
+            if length < self.past_window_size + self.prediction_length:
+                [sampleTicker, sample] = self._choose_random_sample()
+                return [sampleTicker, sample]
+            else:
+                choices = length - (self.past_window_size +
+                                    self.prediction_length)
+                randomIndex = random.randint(0, choices)
+                return (
+                    sample,
+                    hist.iloc[
+                        randomIndex: randomIndex + self.random_dates_total_window
+                    ],
+                )
+        else:
+            try:
+                hist = yf.download(
+                    sample, start=self.fixed_dates_start, end=self.fixed_dates_end
+                )
+                if len(hist.index) == 0:
+                    raise RuntimeError("Failed Download, resampling...")
+                if hist.isnull().values.any():
+                    raise RuntimeError("NaN values identified. resampling...")
+                hist = hist.drop(columns=["Adj Close"])
+                return (sample, hist)
+            except:
+                [sampleTicker, sample] = self._choose_random_sample()
+                return (sampleTicker, sample)
+
     def generate(self):
         df = pd.DataFrame()
         for counter in range(self.total_samples):
-            sample_ticker, preprocessed_data = self._choose_sample()
+            sample_ticker, preprocessed_data = self._choose_random_sample()
             print("sample number " + str(counter + 1))
             try:
-                processed_data = self._custom_arguments(preprocessed_data)
-                normalized_data = self._normalize_dataframe(processed_data)
-                total_columns = len(normalized_data.columns)
-                (output_data, shaved_rows) = self._classify(preprocessed_data)
-                input_data = self._initial_parameters(
-                    normalized_data, total_columns)
-                input_data = input_data[self.past_window_size:]
-                input_data = input_data[: (len(input_data) - shaved_rows)]
-                if len(input_data) < len(output_data):
-                    difference = len(output_data) - len(input_data)
-                    output_data = output_data[difference:]
-                # elif len(output_data) < len(input_data):
-                #     input_data = input_data[:(len(output_data))]
-                for i in range(len(output_data)):
-                    input_data[i].append(output_data[i])
-                df = pd.concat([df, pd.DataFrame(input_data)])
-                df = df.sort_index()
+                df = self.create_df(preprocessed_data, df)
             except ValueError as e:
                 print(str(e))
                 print("ticker: ", sample_ticker)
@@ -394,14 +452,40 @@ class Generator:
 
 
 if __name__ == "__main__":
-    output_data_frame = Generator(
+    # output_data_frame = GenerateTrain(
+    #     # "no_open",
+    #     # "no_close",
+    #     # "no_high",
+    #     # "no_volume",
+    #     # "no_low",
+    #     ordered_or_shuffled="shuffled",
+    #     random_dates_total_window=100,
+    #     total_samples=1,
+    #     adosc={
+    #         "primary_columns": ["high", "low", "close", "volume"],
+    #         "output_columns": 1,
+    #         "period_list": [2, 5],
+    #     },
+    #     # fixed_dates_start="2017-01-01",
+    #     # fixed_dates_end="2017-04-30",
+    #     # stoch={
+    #     #     "primary_columns": ["high", "low", "close"],
+    #     #     "output_columns": 2,
+    #     #     "period_list": [2, 3, 5],
+    #     # },
+    #     # di={
+    #     #     "primary_columns": ["high", "low", "close"],
+    #     #     "output_columns": 2,
+    #     #     "period_list": [5],
+    #     # },
+    # ).generate()
+
+    output_data_frame2 = GenerateRealtime(
         # "no_open",
         # "no_close",
         # "no_high",
         # "no_volume",
         # "no_low",
-        ordered_or_shuffled="shuffled",
-        random_dates_total_window=100,
         adosc={
             "primary_columns": ["high", "low", "close", "volume"],
             "output_columns": 1,
@@ -421,4 +505,4 @@ if __name__ == "__main__":
         # },
     ).generate()
 
-    output_data_frame.to_csv("sampleTrain.csv", index=False, header=False)
+    output_data_frame2.to_csv("sampleTrain2.csv", index=False, header=False)
