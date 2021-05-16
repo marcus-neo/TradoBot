@@ -241,26 +241,6 @@ class Generator:
                 output_list[current_TS_position] = initialize
         return output_list
 
-    def create_df(self, preprocessed_data, df):
-        processed_data = self._custom_arguments(preprocessed_data)
-        normalized_data = self._normalize_dataframe(processed_data)
-        total_columns = len(normalized_data.columns)
-        (output_data, shaved_rows) = self._classify(preprocessed_data)
-        input_data = self._initial_parameters(
-            normalized_data, total_columns)
-        input_data = input_data[self.past_window_size:]
-        input_data = input_data[: (len(input_data) - shaved_rows)]
-        if len(input_data) < len(output_data):
-            difference = len(output_data) - len(input_data)
-            output_data = output_data[difference:]
-        # elif len(output_data) < len(input_data):
-        #     input_data = input_data[:(len(output_data))]
-        for i in range(len(output_data)):
-            input_data[i].append(output_data[i])
-        df = pd.concat([df, pd.DataFrame(input_data)])
-        df = df.sort_index()
-        return df
-
     def max_indicator_length(self):
         max_length = 0
         for _, indicator_params in self.kwargs:
@@ -270,13 +250,14 @@ class Generator:
         return max_length
 
 
-class GenerateRealtime(Generator):
+class GenerateTest(Generator):
     def __init__(
         self,
         *args,
         past_window_size=5,
         prediction_length=5,
         successful_trade_percent=5.0,
+        total_window_length=100,
         ticker_name="AAPL",
         **kwargs
     ):
@@ -296,7 +277,11 @@ class GenerateRealtime(Generator):
         self.ticker_name = ticker_name
         self.args = args
         self.kwargs = kwargs.items()
-        self.total_window = past_window_size + self.max_indicator_length() + 1
+        if total_window_length < past_window_size + self.max_indicator_length() + 1:
+            raise ValueError(
+                "total_window_length too small"
+            )
+        self.total_window = total_window_length
 
     def _choose_sample(self):
         start_date = date.today()-timedelta(days=int(self.total_window/5*7))
@@ -310,11 +295,23 @@ class GenerateRealtime(Generator):
         hist = hist.drop(columns=["Adj Close"])
         return (self.ticker_name, hist)
 
+    def _create_df(self, preprocessed_data, df):
+        processed_data = self._custom_arguments(preprocessed_data)
+        normalized_data = self._normalize_dataframe(processed_data)
+        total_columns = len(normalized_data.columns)
+        input_data = self._initial_parameters(
+            normalized_data, total_columns)
+        input_data = input_data[self.past_window_size:]
+        print(input_data[-1])
+        df = pd.concat([df, pd.DataFrame(input_data)]).tail(1)
+        df = df.sort_index()
+        return df
+
     def generate(self):
         df = pd.DataFrame()
         ticker, preprocessed_data = self._choose_sample()
         try:
-            df = self.create_df(preprocessed_data, df)
+            df = self._create_df(preprocessed_data, df)
         except ValueError as e:
             print(str(e))
             print("ticker: ", ticker)
@@ -444,13 +441,33 @@ class GenerateTrain(Generator):
                 [sampleTicker, sample] = self._choose_random_sample()
                 return (sampleTicker, sample)
 
+    def _create_df(self, preprocessed_data, df):
+        processed_data = self._custom_arguments(preprocessed_data)
+        normalized_data = self._normalize_dataframe(processed_data)
+        total_columns = len(normalized_data.columns)
+        (output_data, shaved_rows) = self._classify(preprocessed_data)
+        input_data = self._initial_parameters(
+            normalized_data, total_columns)
+        input_data = input_data[self.past_window_size:]
+        input_data = input_data[: (len(input_data) - shaved_rows)]
+        if len(input_data) < len(output_data):
+            difference = len(output_data) - len(input_data)
+            output_data = output_data[difference:]
+        # elif len(output_data) < len(input_data):
+        #     input_data = input_data[:(len(output_data))]
+        for i in range(len(output_data)):
+            input_data[i].append(output_data[i])
+        df = pd.concat([df, pd.DataFrame(input_data)])
+        df = df.sort_index()
+        return df
+
     def generate(self):
         df = pd.DataFrame()
         for counter in range(self.total_samples):
             sample_ticker, preprocessed_data = self._choose_random_sample()
             print("sample number " + str(counter + 1))
             try:
-                df = self.create_df(preprocessed_data, df)
+                df = self._create_df(preprocessed_data, df)
             except ValueError as e:
                 print(str(e))
                 print("ticker: ", sample_ticker)
@@ -468,40 +485,15 @@ class GenerateTrain(Generator):
 
 
 if __name__ == "__main__":
-    output_data_frame1 = GenerateTrain(
-        # "no_open",
-        # "no_close",
-        # "no_high",
-        # "no_volume",
-        # "no_low",
-        ordered_or_shuffled="shuffled",
-        random_dates_total_window=100,
-        total_samples=1,
-        adosc={
-            "primary_columns": ["high", "low", "close", "volume"],
-            "output_columns": 1,
-            "period_list": [2, 5],
-        },
-        # fixed_dates_start="2017-01-01",
-        # fixed_dates_end="2017-04-30",
-        # stoch={
-        #     "primary_columns": ["high", "low", "close"],
-        #     "output_columns": 2,
-        #     "period_list": [2, 3, 5],
-        # },
-        # di={
-        #     "primary_columns": ["high", "low", "close"],
-        #     "output_columns": 2,
-        #     "period_list": [5],
-        # },
-    ).generate()
-
-    # output_data_frame2 = GenerateRealtime(
+    # output_data_frame1 = GenerateTrain(
     #     # "no_open",
     #     # "no_close",
     #     # "no_high",
     #     # "no_volume",
     #     # "no_low",
+    #     ordered_or_shuffled="shuffled",
+    #     random_dates_total_window=100,
+    #     total_samples=1,
     #     adosc={
     #         "primary_columns": ["high", "low", "close", "volume"],
     #         "output_columns": 1,
@@ -521,4 +513,29 @@ if __name__ == "__main__":
     #     # },
     # ).generate()
 
-    output_data_frame1.to_csv("sampleTrain2.csv", index=False, header=False)
+    output_data_frame2 = GenerateTest(
+        # "no_open",
+        # "no_close",
+        # "no_high",
+        # "no_volume",
+        # "no_low",
+        # adosc={
+        #     "primary_columns": ["high", "low", "close", "volume"],
+        #     "output_columns": 1,
+        #     "period_list": [2, 5],
+        # },
+        # fixed_dates_start="2017-01-01",
+        # fixed_dates_end="2017-04-30",
+        # stoch={
+        #     "primary_columns": ["high", "low", "close"],
+        #     "output_columns": 2,
+        #     "period_list": [2, 3, 5],
+        # },
+        # di={
+        #     "primary_columns": ["high", "low", "close"],
+        #     "output_columns": 2,
+        #     "period_list": [5],
+        # },
+    ).generate()
+
+    output_data_frame2.to_csv("sampleTrain2.csv", index=False, header=False)
