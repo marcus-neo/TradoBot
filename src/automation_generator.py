@@ -1,6 +1,6 @@
 import ast
 
-from generator import Generator
+from generator import GenerateTrain
 from indicator_params import indicator_dict
 from neural_network_simple import train_and_test
 import pandas as pd
@@ -15,7 +15,7 @@ def generate_all_csv(indicators_filename):
     indicator_inputs["total_samples"] = 200
     indicator_inputs["ordered_or_shuffled"] = "shuffled"
     indicator_inputs["random_dates_total_window"] = 100
-    Generator(**indicator_inputs).generate().to_csv(
+    GenerateTrain(**indicator_inputs).generate().to_csv(
         "./csv_files/EVERYTHING.csv", index=False, header=False)
 
     train_accuracy, val_accuracy = train_and_test(
