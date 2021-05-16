@@ -5,6 +5,8 @@ import tulipy as ti
 from sklearn import preprocessing
 import random
 from datetime import date, timedelta
+import multiprocessing as mp
+import time
 
 
 class Generator:
@@ -47,11 +49,11 @@ class Generator:
 
         Add kwargs in the form of:
         YOUR_INDICATOR_NAME={
-            ## primary columns required to compute the indicator
+            # primary columns required to compute the indicator
             "primary_columns": ["high", "low", "close"],
-            ## number of outputs that the indicator will provide
+            # number of outputs that the indicator will provide
             "output_columns": 2,
-            ## add any additional period params in order here
+            # add any additional period params in order here
             "period_list": [2, 3, 5],
         },
 
@@ -241,25 +243,35 @@ class Generator:
                 output_list[current_TS_position] = initialize
         return output_list
 
-    def create_df(self, preprocessed_data, df):
-        processed_data = self._custom_arguments(preprocessed_data)
-        normalized_data = self._normalize_dataframe(processed_data)
-        total_columns = len(normalized_data.columns)
-        (output_data, shaved_rows) = self._classify(preprocessed_data)
-        input_data = self._initial_parameters(
-            normalized_data, total_columns)
-        input_data = input_data[self.past_window_size:]
-        input_data = input_data[: (len(input_data) - shaved_rows)]
-        if len(input_data) < len(output_data):
-            difference = len(output_data) - len(input_data)
-            output_data = output_data[difference:]
-        # elif len(output_data) < len(input_data):
-        #     input_data = input_data[:(len(output_data))]
-        for i in range(len(output_data)):
-            input_data[i].append(output_data[i])
-        df = pd.concat([df, pd.DataFrame(input_data)])
-        df = df.sort_index()
-        return df
+    def create_df(self, shared_list, counter):
+        print("sample number", counter + 1)
+
+        while True:
+            sample_ticker, preprocessed_data = self._choose_random_sample()
+
+            try:
+                processed_data = self._custom_arguments(preprocessed_data)
+                normalized_data = self._normalize_dataframe(processed_data)
+                total_columns = len(normalized_data.columns)
+                (output_data, shaved_rows) = self._classify(preprocessed_data)
+                input_data = self._initial_parameters(
+                    normalized_data, total_columns)
+                input_data = input_data[self.past_window_size:]
+                input_data = input_data[: (len(input_data) - shaved_rows)]
+                if len(input_data) < len(output_data):
+                    difference = len(output_data) - len(input_data)
+                    output_data = output_data[difference:]
+                # elif len(output_data) < len(input_data):
+                #     input_data = input_data[:(len(output_data))]
+                for i in range(len(output_data)):
+                    input_data[i].append(output_data[i])
+                shared_list.extend(input_data)
+                # print("Write done for process:", counter + 1)
+                break
+            except ValueError as e:
+                print(str(e))
+                print("ticker: ", sample_ticker)
+                continue
 
 
 class GenerateRealtime(Generator):
@@ -429,16 +441,26 @@ class GenerateTrain(Generator):
                 return (sampleTicker, sample)
 
     def generate(self):
-        df = pd.DataFrame()
+        shared_list = mp.Manager().list()
+        processes = []
+
+        start = time.perf_counter()
+
         for counter in range(self.total_samples):
-            sample_ticker, preprocessed_data = self._choose_random_sample()
-            print("sample number " + str(counter + 1))
-            try:
-                df = self.create_df(preprocessed_data, df)
-            except ValueError as e:
-                print(str(e))
-                print("ticker: ", sample_ticker)
-                counter -= 1
+            process = mp.Process(target=self.create_df,
+                                 args=(shared_list, counter,))
+            processes.append(process)
+            process.start()
+
+        for process in processes:
+            process.join()
+
+        df = pd.DataFrame(list(shared_list))
+        df = df.sort_index()
+
+        end = time.perf_counter()
+
+        print("Total time taken: %s" % (end - start))
 
         if self.ordered_or_shuffled == "shuffled":
             df = df.sample(frac=1).reset_index(drop=True)
