@@ -67,7 +67,7 @@ class Generator:
         past_window_size=5,
         prediction_length=5,
         successful_trade_percent=5.0,
-        total_samples=100,
+        total_samples=200,
         ticker_list_directory="../StockTickers/TickerNames.csv",
         random_dates_total_window=None,
         fixed_dates_start=None,
@@ -281,6 +281,8 @@ class Generator:
                 )
                 if len(hist.index) == 0:
                     raise RuntimeError("Failed Download, resampling...")
+                if hist.isnull().values.any():
+                    raise RuntimeError("NaN values identified. resampling...")
                 hist = hist.drop(columns=["Adj Close"])
                 return (sample, hist)
             except:
@@ -356,7 +358,7 @@ class Generator:
         df = pd.DataFrame()
         for counter in range(self.total_samples):
             sample_ticker, preprocessed_data = self._choose_sample()
-            print("sample number " + str(counter))
+            print("sample number " + str(counter + 1))
             try:
                 processed_data = self._custom_arguments(preprocessed_data)
                 normalized_data = self._normalize_dataframe(processed_data)
@@ -369,9 +371,8 @@ class Generator:
                 if len(input_data) < len(output_data):
                     difference = len(output_data) - len(input_data)
                     output_data = output_data[difference:]
-                elif len(output_data) < len(input_data):
-                    difference = len(input_data) - len(output_data)
-                    input_data = input_data[:(len(output_data))]
+                # elif len(output_data) < len(input_data):
+                #     input_data = input_data[:(len(output_data))]
                 for i in range(len(output_data)):
                     input_data[i].append(output_data[i])
                 df = pd.concat([df, pd.DataFrame(input_data)])

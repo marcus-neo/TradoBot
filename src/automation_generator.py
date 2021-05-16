@@ -12,7 +12,7 @@ def generate_all_csv(indicators_filename):
     indicator_inputs["past_window_size"] = 5
     indicator_inputs["prediction_length"] = 5
     indicator_inputs["successful_trade_percent"] = 5.0
-    indicator_inputs["total_samples"] = 100
+    indicator_inputs["total_samples"] = 200
     indicator_inputs["ordered_or_shuffled"] = "shuffled"
     indicator_inputs["random_dates_total_window"] = 100
     Generator(**indicator_inputs).generate().to_csv(
