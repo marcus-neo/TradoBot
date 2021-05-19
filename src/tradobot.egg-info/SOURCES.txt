@@ -1,0 +1,14 @@
+README.md
+setup.cfg
+setup.py
+src/tradobot/__init__.py
+src/tradobot/automation_generator.py
+src/tradobot/automation_generator2.py
+src/tradobot/generator.py
+src/tradobot/indicator_params.py
+src/tradobot/neural_network_simple.py
+src/tradobot.egg-info/PKG-INFO
+src/tradobot.egg-info/SOURCES.txt
+src/tradobot.egg-info/dependency_links.txt
+src/tradobot.egg-info/requires.txt
+src/tradobot.egg-info/top_level.txt
