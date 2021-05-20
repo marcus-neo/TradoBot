@@ -2,16 +2,16 @@ import os
 import csv
 import tempfile
 
-from tradobot.indicator_params import indicator_dict
-from tradobot.generator import GenerateTrain
-
 import compare
+
+from tradobot.indicator_params import IndicatorDict
+from tradobot.generator import GenerateTrain
 
 
 def test_generator(aapl_test):
 
     (ticker_dir, true_output) = aapl_test
-    ind_dic = indicator_dict()
+    ind_dic = IndicatorDict()
     indicator_inputs = ind_dic.indicator_dict
     indicator_inputs["past_window_size"] = 5
     indicator_inputs["prediction_length"] = 5
@@ -24,7 +24,8 @@ def test_generator(aapl_test):
     with tempfile.TemporaryDirectory() as tmpdirname:
         output = os.path.join(tmpdirname, "output.csv")
         GenerateTrain(**indicator_inputs).generate().to_csv(
-            output, index=False, header=False)
+            output, index=False, header=False
+        )
         with open(output) as outputfile:
             test_output = list(csv.reader(outputfile))
     assert compare.compare_equal(true_output, test_output)
