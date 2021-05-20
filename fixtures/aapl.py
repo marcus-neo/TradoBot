@@ -15,4 +15,4 @@ def aapl_test():
 
     with open(os.path.join(aapl_directory, predictions_filename)) as predictions_file:
         predictions = list(csv.reader(predictions_file))
-    return predictions
+    return (ticker_directory, predictions)

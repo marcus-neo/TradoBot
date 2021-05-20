@@ -1,6 +1,6 @@
-from generator import GenerateTrain
-from indicator_params import indicator_dict
-from neural_network_simple import train_and_test
+from tradobot.generator import GenerateTrain
+from tradobot.indicator_params import indicator_dict
+from tradobot.neural_network_simple import train_and_test
 import pandas as pd
 
 

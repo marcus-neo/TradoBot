@@ -1,2 +1,5 @@
 .vscode/
+.pytest_cache
 src/__pycache__
+fixtures/__pycache__
+__pycache__

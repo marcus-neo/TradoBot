@@ -40,5 +40,11 @@ jobs:
       - name: Run Tests
         run: |
           python -m pytest
+      - name: Upload Test Output
+        if: always()
+        uses: actions/upload-artifact@v2
+        with:
+          name: test_output-${{matrix.os}}-python-${{matrix.python-version}}.csv
+          path: output.csv
           
 
