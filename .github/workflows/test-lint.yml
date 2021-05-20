@@ -15,7 +15,7 @@ jobs:
           architecture: x64
       - name: Install dependencies
         run: |
-          pip install --no-deps -r requirements.txt
+          pip install -r requirements.txt
       - name: Pylint, Flake8 and Pydocstyle
         run: |
           ./lint.sh
