@@ -1,7 +1,6 @@
 import os
 import csv
 import tempfile
-
 import compare
 
 from tradobot.indicator_params import IndicatorDict
@@ -22,10 +21,10 @@ def test_generator(aapl_test):
     indicator_inputs["fixed_dates_end"] = "2010-10-10"
     indicator_inputs["ticker_list_directory"] = ticker_dir
     with tempfile.TemporaryDirectory() as tmpdirname:
-        output = os.path.join(tmpdirname, "output.csv")
+        output2 = os.path.join(tmpdirname, "output2.csv")
         GenerateTrain(**indicator_inputs).generate().to_csv(
-            output, index=False, header=False
+            output2, index=False, header=False
         )
-        with open(output) as outputfile:
+        with open(output2) as outputfile:
             test_output = list(csv.reader(outputfile))
     assert compare.compare_equal(true_output, test_output)
