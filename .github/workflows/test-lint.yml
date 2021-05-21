@@ -17,7 +17,7 @@ jobs:
         run: |
           pip3 install .
           pip3 install -r requirements.txt
-          pip3 uninstall numpy
+          pip3 uninstall -y numpy
           pip3 install numpy=1.20.2
       - name: Pylint, Flake8 and Pydocstyle
         run: |
@@ -41,7 +41,7 @@ jobs:
         run: |
           pip3 install .
           pip3 install -r requirements.txt
-          pip3 uninstall numpy
+          pip3 uninstall -y numpy
           pip3 install numpy=1.20.2
       - name: Run Tests
         run: |
