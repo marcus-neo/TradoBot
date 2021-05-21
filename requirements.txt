@@ -61,7 +61,7 @@ tensorflow-estimator==2.4.0
 termcolor==1.1.0
 threadpoolctl==2.1.0
 toml==0.10.2
-tulipy==0.3.1
+tulipy==0.4.0
 typing-extensions==3.7.4.3
 urllib3==1.26.4
 Werkzeug==2.0.1

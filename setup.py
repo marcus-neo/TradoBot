@@ -27,7 +27,7 @@ setuptools.setup(
         "pandas==1.2.3",
         "Keras==2.4.3",
         "cython==0.29.23",
-        "tulipy==0.3.1",
+        "tulipy==0.4.0",
         "yfinance==0.1.54",
         "scikit-learn==0.24.2",
     ],
