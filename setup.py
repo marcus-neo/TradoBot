@@ -19,14 +19,15 @@ setuptools.setup(
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
-        "Intended Audience :: Science/Research"
+        "Intended Audience :: Science/Research",
     ],
     install_requires=[
         "tensorflow==2.4.1",
-        "numpy==1.20.2",
+        "numpy<=1.20.2",
         "pandas==1.2.3",
         "Keras==2.4.3",
-        "tulipy==0.4.0",
+        "cython==0.29.23",
+        "tulipy==0.3.1",
         "yfinance==0.1.54",
         "scikit-learn==0.24.2",
     ],
