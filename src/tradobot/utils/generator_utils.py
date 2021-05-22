@@ -1,3 +1,4 @@
+"""Utility script containing functions used by generator classes."""
 import numpy as np
 import tulipy as ti
 import pandas as pd
@@ -22,7 +23,7 @@ def normalize_dataframe(dataframe):
     )
     return dataframe
 
-
+# pylint: disable=R0912, R0915
 def custom_arguments(dataframe, given_args, given_kwargs):
     """Add indicator columns (if any).
 

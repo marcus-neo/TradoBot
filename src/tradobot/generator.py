@@ -7,7 +7,7 @@ import pandas as pd
 import yfinance as yf
 
 from tradobot.utils.generator_utils import (
-    normalize_dataframe, 
+    normalize_dataframe,
     custom_arguments,
     classify,
     initial_parameters,
