@@ -496,9 +496,3 @@ class IndicatorDict:
 if __name__ == "__main__":
     ind_dic = IndicatorDict()
     ind_dic.get_permutations()
-    # with open("indicator_combinations.txt", "r") as fd:
-    #     lines = fd.readlines()
-    #     for line in lines:
-    #         indicator_lst = ast.literal_eval(line)
-    #         for indicator in indicator_lst:
-    #             print(ind_dic.get_params(indicator))

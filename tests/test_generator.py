@@ -23,7 +23,6 @@ def test_generator(aapl_test):
     with tempfile.TemporaryDirectory() as tmpdirname:
         output2 = os.path.join(tmpdirname, "output2.csv")
         generator_output = GenerateTrain(**indicator_inputs).generate()
-        # print("generator_output:", generator_output)
         generator_output.to_csv(
             output2, index=False, header=False
         )

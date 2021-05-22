@@ -162,7 +162,6 @@ class GenerateTest:
             normalized_data, total_columns, self.past_window_size
         )
         input_data = input_data[self.past_window_size :]  # noqa: E203
-        print(input_data[-1])
         dataframe = pd.concat([dataframe, pd.DataFrame(input_data)]).tail(1)
         dataframe = dataframe.sort_index()
         return dataframe
@@ -375,8 +374,6 @@ class GenerateTrain:
                 start=self.fixed_dates_start,
                 end=self.fixed_dates_end,
             )
-            
-            print(hist)
             if len(hist.index) == 0:
                 raise RuntimeError("Failed Download, resampling...")
             if hist.isnull().values.any():
@@ -417,7 +414,6 @@ class GenerateTrain:
                 for index, value in enumerate(output_data):
                     input_data[index].append(value)
                 shared_list.extend(input_data)
-                # print("Write done for process:", counter + 1)
                 break
             except ValueError as e:
                 print(str(e))
