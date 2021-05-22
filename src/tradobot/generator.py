@@ -375,6 +375,8 @@ class GenerateTrain:
                 start=self.fixed_dates_start,
                 end=self.fixed_dates_end,
             )
+            
+            print(hist)
             if len(hist.index) == 0:
                 raise RuntimeError("Failed Download, resampling...")
             if hist.isnull().values.any():
