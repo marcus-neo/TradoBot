@@ -14,6 +14,7 @@ from tradobot.utils.generator_utils import (
     max_indicator_length
 )
 
+
 class GenerateTest:
 
     """Create an array of lists.

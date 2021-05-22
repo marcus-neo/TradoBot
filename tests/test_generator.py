@@ -22,7 +22,9 @@ def test_generator(aapl_test):
     indicator_inputs["ticker_list_directory"] = ticker_dir
     with tempfile.TemporaryDirectory() as tmpdirname:
         output2 = os.path.join(tmpdirname, "output2.csv")
-        GenerateTrain(**indicator_inputs).generate().to_csv(
+        generator_output = GenerateTrain(**indicator_inputs).generate()
+        print("generator_output:", generator_output)
+        generator_outut.to_csv(
             output2, index=False, header=False
         )
         with open(output2) as outputfile:

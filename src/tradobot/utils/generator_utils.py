@@ -4,6 +4,7 @@ import tulipy as ti
 import pandas as pd
 from sklearn import preprocessing
 
+
 def normalize_dataframe(dataframe):
     """Normalize all columns in the dataframe.
 
@@ -22,6 +23,7 @@ def normalize_dataframe(dataframe):
         scaled_vals, columns=dataframe.columns, index=dataframe.index
     )
     return dataframe
+
 
 # pylint: disable=R0912, R0915
 def custom_arguments(dataframe, given_args, given_kwargs):
