@@ -12,11 +12,11 @@ def generate_all_csv():
     indicator_inputs["successful_trade_percent"] = 5.0
     indicator_inputs["total_samples"] = 1
     indicator_inputs["ordered_or_shuffled"] = "ordered"
-    indicator_inputs["fixed_dates_start"] = "2009-10-10"
-    indicator_inputs["fixed_dates_end"] = "2010-10-10"
+    indicator_inputs["fixed_dates_start"] = "2007-10-10"
+    indicator_inputs["fixed_dates_end"] = "2008-10-10"
     indicator_inputs[
         "ticker_list_directory"
-    ] = "../fixtures/aapl/TickerNames.csv"
+    ] = "../../fixtures/aapl/TickerNames.csv"
     GenerateTrain(**indicator_inputs).generate().to_csv(
         "./output.csv", index=False, header=False
     )
