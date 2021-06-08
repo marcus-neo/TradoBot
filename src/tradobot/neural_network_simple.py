@@ -1,12 +1,12 @@
 """Module containing the model training and validation function."""
 from numpy import loadtxt
-from keras.models import Sequential
-from keras.utils import np_utils
+from tensorflow.python.keras.engine.sequential import Sequential
+from tensorflow.python.keras.utils import np_utils
 
 # from keras.callbacks import EarlyStopping
-from keras.layers import Dense
-from keras.layers import BatchNormalization
-from keras.layers import Dropout
+from tensorflow.python.keras.layers import Dense
+from tensorflow.python.keras.layers import BatchNormalization
+from tensorflow.python.keras.layers import Dropout
 
 INPUT_FILENAME = "csv_files/nn_input.csv"
 
@@ -79,7 +79,7 @@ def train_and_test(input_filename):
     # evaluate the keras model
     _, train_accuracy = model.evaluate(x_train, y_train)
     _, test_accuracy = model.evaluate(x_test, y_test)
-    return train_accuracy, test_accuracy
+    return train_accuracy, test_accuracy, model
     # print('Train Accuracy: %.2f%%' % (train_accuracy*100))
     # print('Test Accuracy: %.2f%%' % (test_accuracy*100))
 

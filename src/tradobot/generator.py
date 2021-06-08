@@ -1,8 +1,9 @@
 """Contain the code to generate the training and test sets."""
 import random
-from datetime import datetime, date, timedelta
+from datetime import datetime, timedelta
 import time
 import multiprocessing as mp
+import pytz
 import pandas as pd
 import yfinance as yf
 
@@ -87,8 +88,8 @@ class GenerateTest:
         total_samples=200,
         ticker_name="AAPL",
         total_window=100,
-        fixed_dates_start=None,
-        fixed_dates_end=None,
+        # fixed_dates_start=None,
+        # fixed_dates_end=None,
         **kwargs
     ):
         """Initialize the Generator class."""
@@ -107,43 +108,22 @@ class GenerateTest:
             raise ValueError("total_samples cannot be 0 or negative")
         self.past_window_size = past_window_size
         self.prediction_length = prediction_length
-        self.fixed_dates_start = fixed_dates_start
-        self.fixed_dates_end = fixed_dates_end
         self.successful_trade_percent = 0.01 * successful_trade_percent
         self.ticker_name = ticker_name
         self.total_samples = total_samples
         self.total_window = total_window
         self.args = args
         self.kwargs = kwargs.items()
-        if fixed_dates_end is None and fixed_dates_start is None:
-            raise ValueError(
-                "either random_dates_total_window or"
-                "fix_dates input has to have a value"
-            )
-        if fixed_dates_end is None:
-            raise ValueError("fixed_dates_end needs to be filled in")
-        if fixed_dates_start is None:
-            raise ValueError("fixed_dates_start needs to be filled in")
-
-        end_datetime = datetime.strptime(fixed_dates_end, "%Y-%m-%d")
-        start_datetime = datetime.strptime(fixed_dates_start, "%Y-%m-%d")
-        if (
-            int((end_datetime - start_datetime).days / 7 * 5)
-            < max_indicator_length(self.kwargs)
-            + past_window_size
-            + prediction_length
-            + 1
-        ):
-            raise ValueError(
-                "too small time difference between startdate and enddate."
-            )
 
     def _choose_sample(self):
-        start_date = date.today() - timedelta(
+        timez = pytz.timezone("America/Cancun")
+        currtime = datetime.now(tz=timez).date()
+        start_date = currtime - timedelta(
             days=int(self.total_window / 5 * 7)
         )
+        print(self.ticker_name)
         hist = yf.download(
-            self.ticker_name, start=start_date, end=date.today()
+            self.ticker_name, start=start_date, end=currtime
         )
         if len(hist.index) == 0:
             raise RuntimeError("Failed Download, empty dataset")
@@ -169,7 +149,10 @@ class GenerateTest:
     def generate(self):
         """Generate the test dataset."""
         dataframe = pd.DataFrame()
-        ticker, preprocessed_data = self._choose_sample()
+        try:
+            ticker, preprocessed_data = self._choose_sample()
+        except RuntimeError as e:
+            return dataframe
         try:
             dataframe = self._create_df(preprocessed_data, dataframe)
         except ValueError as e:
@@ -249,7 +232,7 @@ class GenerateTrain:
         prediction_length=5,
         successful_trade_percent=5.0,
         total_samples=200,
-        ticker_list_directory="../StockTickers/TickerNames.csv",
+        ticker_list_directory="./tradobot/StockTickers/TickerNames.csv",
         random_dates_total_window=None,
         fixed_dates_start=None,
         fixed_dates_end=None,
@@ -484,28 +467,28 @@ if __name__ == "__main__":
     # ).generate()
 
     output_data_frame2 = GenerateTest(
-        # "no_open",
-        # "no_close",
-        # "no_high",
-        # "no_volume",
-        # "no_low",
-        # adosc={
-        #     "primary_columns": ["high", "low", "close", "volume"],
-        #     "output_columns": 1,
-        #     "period_list": [2, 5],
-        # },
+        "no_open",
+        "no_close",
+        "no_high",
+        "no_volume",
+        "no_low",
+        adosc={
+            "primary_columns": ["high", "low", "close", "volume"],
+            "output_columns": 1,
+            "period_list": [2, 5],
+        },
         # fixed_dates_start="2017-01-01",
         # fixed_dates_end="2017-04-30",
-        # stoch={
-        #     "primary_columns": ["high", "low", "close"],
-        #     "output_columns": 2,
-        #     "period_list": [2, 3, 5],
-        # },
-        # di={
-        #     "primary_columns": ["high", "low", "close"],
-        #     "output_columns": 2,
-        #     "period_list": [5],
-        # },
+        stoch={
+            "primary_columns": ["high", "low", "close"],
+            "output_columns": 2,
+            "period_list": [2, 3, 5],
+        },
+        di={
+            "primary_columns": ["high", "low", "close"],
+            "output_columns": 2,
+            "period_list": [5],
+        },
     ).generate()
 
     output_data_frame2.to_csv("sampleTrain2.csv", index=False, header=False)

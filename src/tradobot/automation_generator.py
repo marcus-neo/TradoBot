@@ -21,7 +21,8 @@ def generate_all_csv():
         "./csv_files/EVERYTHING.csv", index=False, header=False
     )
 
-    train_accuracy, val_accuracy = train_and_test("./csv_files/EVERYTHING.csv")
+    train_accuracy, val_accuracy, model = train_and_test("./csv_files/EVERYTHING.csv")
+    model.save("./model")
     print(train_accuracy, val_accuracy)
 
 
