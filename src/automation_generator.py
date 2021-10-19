@@ -2,7 +2,7 @@ import ast
 
 from generator import GenerateTrain
 from indicator_params import indicator_dict
-from neural_network_simple import train_and_test
+# from neural_network_simple import train_and_test
 import pandas as pd
 
 
@@ -18,9 +18,9 @@ def generate_all_csv(indicators_filename):
     GenerateTrain(**indicator_inputs).generate().to_csv(
         "./csv_files/EVERYTHING.csv", index=False, header=False)
 
-    train_accuracy, val_accuracy = train_and_test(
-        "./csv_files/EVERYTHING.csv")
-    print(train_accuracy, val_accuracy)
+    # train_accuracy, val_accuracy = train_and_test(
+    #     "./csv_files/EVERYTHING.csv")
+    # print(train_accuracy, val_accuracy)
     # with open(indicators_filename, "r") as fd:
     #     lines=fd.readlines()
     #     for line in lines:

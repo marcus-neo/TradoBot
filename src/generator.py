@@ -7,6 +7,7 @@ import random
 from datetime import date, timedelta
 import multiprocessing as mp
 import time
+import datetime
 
 
 class Generator:
@@ -375,7 +376,7 @@ class GenerateTrain(Generator):
                 end_datetime = datetime.strptime(fixed_dates_end, "%Y-%m-%d")
                 start_datetime = datetime.strptime(
                     fixed_dates_start, "%Y-%m-%d")
-                if int((end_ddatetime-start_datetime).days/7*5) < self.max_indicator_length + past_window_size + prediction_length + 1:
+                if int((end_datetime-start_datetime).days/7*5) < self.max_indicator_length + past_window_size + prediction_length + 1:
                     raise ValueError(
                         "too small time difference between startdate and enddate."
                     )
