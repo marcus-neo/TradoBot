@@ -12,3 +12,4 @@ Pillow
 pylint
 pydocstyle
 flake8
+pytest

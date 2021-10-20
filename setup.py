@@ -36,5 +36,6 @@ setuptools.setup(
         "pylint",
         "flake8",
         "pydocstyle",
+        "pytest",
     ],
 )

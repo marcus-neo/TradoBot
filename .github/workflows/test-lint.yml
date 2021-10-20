@@ -20,7 +20,7 @@ jobs:
           pip3 install numpy==1.20.2
       - name: Pylint, Flake8 and Pydocstyle
         run: |
-          ./lint.sh
+          ./lint2.sh
   # test:
   #   strategy:
   #     matrix:
