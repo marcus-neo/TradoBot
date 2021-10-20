@@ -1,10 +1,13 @@
-from itertools import chain, combinations
-import ast
-import pickle
+"""Module containing the dictionary of indicators and their parameters."""
+from itertools import combinations
 
 
-class indicator_dict:
+class IndicatorDict:
+
+    """Class containing the dictionary of indicators and their parameters."""
+
     def __init__(self):
+        """Initialize the dictionary."""
         self.indicator_dict = {
             "ad": {
                 "primary_columns": ["high", "low", "close", "volume"],
@@ -479,22 +482,17 @@ class indicator_dict:
         }
 
     def get_permutations(self):
-        with open("indicator_combinations.txt", "a") as fd:
-            for r in range(min(4, len(self.indicator_dict) + 1)):
-                for element in combinations(self.indicator_dict, r):
-                    fd.write(str(list(element)) + "\n")
-        return
+        """Get all permutations of combinations."""
+        with open("indicator_combinations.txt", "a") as write_file:
+            for each in range(min(4, len(self.indicator_dict) + 1)):
+                for element in combinations(self.indicator_dict, each):
+                    write_file.write(str(list(element)) + "\n")
 
     def get_params(self, param_name):
+        """Get the parameters of a single indicator."""
         return self.indicator_dict[param_name]
 
 
 if __name__ == "__main__":
-    ind_dic = indicator_dict()
+    ind_dic = IndicatorDict()
     ind_dic.get_permutations()
-    # with open("indicator_combinations.txt", "r") as fd:
-    #     lines = fd.readlines()
-    #     for line in lines:
-    #         indicator_lst = ast.literal_eval(line)
-    #         for indicator in indicator_lst:
-    #             print(ind_dic.get_params(indicator))

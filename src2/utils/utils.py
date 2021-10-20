@@ -12,9 +12,9 @@ import matplotlib.pyplot as plt
 from sklearn import preprocessing
 from toolz.functoolz import pipe
 from utils.parameters import Parameters
-from utils.indicator_params import indicator_dict
+from utils.indicator_params import IndicatorDict
 
-indicators = indicator_dict().indicator_dict
+indicators = IndicatorDict().indicator_dict
 
 
 def add_indicators(hist: np.ndarray) -> np.ndarray:
@@ -69,7 +69,6 @@ def get_ticker(ticker_name: str, window: int) -> pd.DataFrame:
     :param window:      The total window size to be retrieved.
     :return:            The historical data represented by pandas dataframe.
     """
-
     return (
         ticker_name,
         yf.Ticker(ticker_name)
@@ -79,7 +78,7 @@ def get_ticker(ticker_name: str, window: int) -> pd.DataFrame:
 
 
 def ticker_sampler(ticker_list_directory: str) -> str:
-    """Samples a single ticker from the list of tickers.
+    """Sample a single ticker from the list of tickers.
 
     :param ticker_list_directory:   Path of the file containing all tickers.
     :return:                        A name of the sampled ticker.
@@ -89,7 +88,7 @@ def ticker_sampler(ticker_list_directory: str) -> str:
 
 
 def window_sample(hist: np.ndarray, window: int) -> np.ndarray:
-    """Samples a random window from the given historical data.
+    """Sample a random window from the given historical data.
 
     :param hist:    The historical data.
     :param window:  The window size to sample.
@@ -97,7 +96,7 @@ def window_sample(hist: np.ndarray, window: int) -> np.ndarray:
     """
     random_range = len(hist) - window
     sampled_index = random.randint(0, random_range - 1)
-    return hist[sampled_index : sampled_index + window]
+    return hist[sampled_index: sampled_index + window]
 
 
 def classify(
@@ -108,8 +107,8 @@ def classify(
     :param data:    The historical data.
     :param index:   The name of the file that contains the data
                     (We assume its the image index).
-    :return:        A list containing the image name that corresponds to the data,
-                    and the action.
+    :return:        A list containing the image name that corresponds to the
+                    data, and the action.
     """
     high = data[1:, 1]
     low = data[1:, 2]
@@ -130,7 +129,7 @@ def classify(
         if hit_sl:
             value = "short"
             break
-    if value == None:
+    if value is None:
         value = "no_action"
     return [
         f"{index}.jpg",
@@ -158,17 +157,16 @@ def create_training_image(data: np.ndarray, index: int) -> None:
     :param data:    The historical data, potentially with indicator outputs.
     :param index:   The data's index number, used for saving.
     """
-
     # This minmaxscalar normalizes each column:
     #   minimum of the column -> 0
     #   maximum of the column -> 1
     #   all other values in between becomes normalized accordingly.
     min_max_scaler = preprocessing.MinMaxScaler()
-    fig1, ax = plt.subplots(
+    fig1, figaxis = plt.subplots(
         figsize=(11, 11),
         frameon=False,
     )
-    ax.set_axis_off()
+    figaxis.set_axis_off()
     image_name = os.path.join(
         Parameters.IMAGE_OUTPUT_DIRECTORY, f"{index}.jpg"
     )
@@ -197,11 +195,11 @@ def create_test_image(data: np.ndarray, index: int) -> None:
     #   maximum of the column -> 1
     #   all other values in between becomes normalized accordingly.
     min_max_scaler = preprocessing.MinMaxScaler()
-    fig1, ax = plt.subplots(
+    fig1, figaxis = plt.subplots(
         figsize=(11, 11),
         frameon=False,
     )
-    ax.set_axis_off()
+    figaxis.set_axis_off()
     image_name = os.path.join(Parameters.TEST_OUTPUT_DIRECTORY, f"{index}.jpg")
 
     # General pipeline function:

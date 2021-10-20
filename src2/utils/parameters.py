@@ -1,4 +1,4 @@
-"""Module containing all preset parameters.""" 
+"""Module containing all preset parameters."""
 import os
 
 
@@ -14,7 +14,7 @@ class Parameters:
     LABEL_OUTPUT_DIRECTORY = os.path.join(ROOT_DIRECTORY, "output/labels")
     TEST_OUTPUT_DIRECTORY = os.path.join(ROOT_DIRECTORY, "output/test")
     SAMPLES = 4000
-    SAMPLE_WINDOW_SIZE = 730
+    SAMPLE_WIN_SIZE = 730
     LOOKBACK = 50
     LOOKAHEAD = 5
     IMAGE_HEIGHT = 320
