@@ -1,6 +1,6 @@
 sklearn
 keras
-tensorflow==2.4.3
+tensorflow==2.5.1
 numpy
 Pandas
 yfinance
