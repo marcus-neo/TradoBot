@@ -9,3 +9,6 @@ matplotlib
 toolz
 seaborn
 Pillow
+pylint
+pydocstyle
+flake8
