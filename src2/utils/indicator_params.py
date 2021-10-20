@@ -1,11 +1,12 @@
 """Module containing all supported indicators and their input/output params."""
 
 
-class indicator_dict:
+class IndicatorDict:
 
     """Class containing the dictionary of all supported indicators."""
 
     def __init__(self):
+        """Initialise the class. Create the indicator dictionary."""
         self.indicator_dict = [
             {
                 "name": "ad",
