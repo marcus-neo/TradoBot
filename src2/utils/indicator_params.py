@@ -1,498 +1,576 @@
-"""Module containing the dictionary of indicators and their parameters."""
-from itertools import combinations
+"""Module containing all supported indicators and their input/output params."""
 
 
-class IndicatorDict:
+class indicator_dict:
 
-    """Class containing the dictionary of indicators and their parameters."""
+    """Class containing the dictionary of all supported indicators."""
 
     def __init__(self):
-        """Initialize the dictionary."""
-        self.indicator_dict = {
-            "ad": {
+        self.indicator_dict = [
+            {
+                "name": "ad",
                 "primary_columns": ["high", "low", "close", "volume"],
                 "output_columns": 1,
             },
-            "adosc": {
+            {
+                "name": "adosc",
                 "primary_columns": ["high", "low", "close", "volume"],
                 "output_columns": 1,
                 "period_list": (2, 5),
             },
-            "adx": {
+            {
+                "name": "adx",
                 "primary_columns": ["high", "low", "close"],
                 "output_columns": 1,
                 "period_list": (5,),
             },
-            "adxr": {
+            {
+                "name": "adxr",
                 "primary_columns": ["high", "low", "close"],
                 "output_columns": 1,
                 "period_list": (5,),
             },
-            "ao": {
+            {
+                "name": "ao",
                 "primary_columns": ["high", "low"],
                 "output_columns": 1,
             },
-            "apoOPEN": {
+            {
+                "name": "apo",
                 "primary_columns": ["open"],
                 "output_columns": 1,
                 "period_list": (2, 5),
             },
-            "apoHIGH": {
+            {
+                "name": "apo",
                 "primary_columns": ["high"],
                 "output_columns": 1,
                 "period_list": (2, 5),
             },
-            "apoLOW": {
+            {
+                "name": "apo",
                 "primary_columns": ["low"],
                 "output_columns": 1,
                 "period_list": (2, 5),
             },
-            "apoCLOSE": {
+            {
+                "name": "apo",
                 "primary_columns": ["close"],
                 "output_columns": 1,
                 "period_list": (2, 5),
             },
-            "aroon": {
+            {
+                "name": "aroon",
                 "primary_columns": ["high", "low"],
                 "output_columns": 2,
                 "period_list": (5,),
             },
-            "aroonosc": {
+            {
+                "name": "aroonosc",
                 "primary_columns": ["high", "low"],
                 "output_columns": 1,
                 "period_list": (5,),
             },
-            "atr": {
+            {
+                "name": "atr",
                 "primary_columns": ["high", "low", "close"],
                 "output_columns": 1,
                 "period_list": (5,),
             },
-            "bop": {
+            {
+                "name": "bop",
                 "primary_columns": ["open", "high", "low", "close"],
                 "output_columns": 1,
             },
-            "cci": {
+            {
+                "name": "cci",
                 "primary_columns": ["high", "low", "close"],
                 "output_columns": 1,
                 "period_list": (5,),
             },
-            "cmoOPEN": {
+            {
+                "name": "cmo",
                 "primary_columns": ["open"],
                 "output_columns": 1,
                 "period_list": (5,),
             },
-            "cmoHIGH": {
+            {
+                "name": "cmo",
                 "primary_columns": ["high"],
                 "output_columns": 1,
                 "period_list": (5,),
             },
-            "cmoLOW": {
+            {
+                "name": "cmo",
                 "primary_columns": ["low"],
                 "output_columns": 1,
                 "period_list": (5,),
             },
-            "cmoCLOSE": {
+            {
+                "name": "cmo",
                 "primary_columns": ["close"],
                 "output_columns": 1,
                 "period_list": (5,),
             },
-            "cvi": {
+            {
+                "name": "cvi",
                 "primary_columns": ["high", "low"],
                 "output_columns": 1,
                 "period_list": (5,),
             },
-            "di": {
+            {
+                "name": "di",
                 "primary_columns": ["high", "low", "close"],
                 "output_columns": 2,
                 "period_list": (5,),
             },
-            "dm": {
+            {
+                "name": "dm",
                 "primary_columns": ["high", "low"],
                 "output_columns": 2,
                 "period_list": (5,),
             },
-            "dpoOPEN": {
+            {
+                "name": "dpo",
                 "primary_columns": ["open"],
                 "output_columns": 1,
                 "period_list": (5,),
             },
-            "dpoHIGH": {
+            {
+                "name": "dpo",
                 "primary_columns": ["high"],
                 "output_columns": 1,
                 "period_list": (5,),
             },
-            "dpoLOW": {
+            {
+                "name": "dpo",
                 "primary_columns": ["low"],
                 "output_columns": 1,
                 "period_list": (5,),
             },
-            "dpoCLOSE": {
+            {
+                "name": "dpo",
                 "primary_columns": ["close"],
                 "output_columns": 1,
                 "period_list": (5,),
             },
-            "dx": {
+            {
+                "name": "dx",
                 "primary_columns": ["high", "low", "close"],
                 "output_columns": 1,
                 "period_list": (5,),
             },
-            "emv": {
+            {
+                "name": "emv",
                 "primary_columns": ["high", "low", "volume"],
                 "output_columns": 1,
             },
-            "fisher": {
+            {
+                "name": "fisher",
                 "primary_columns": ["high", "low"],
                 "output_columns": 2,
                 "period_list": (5,),
             },
-            "foscOPEN": {
+            {
+                "name": "fosc",
                 "primary_columns": ["open"],
                 "output_columns": 1,
                 "period_list": (5,),
             },
-            "foscHIGH": {
+            {
+                "name": "fosc",
                 "primary_columns": ["high"],
                 "output_columns": 1,
                 "period_list": (5,),
             },
-            "foscLOW": {
+            {
+                "name": "fosc",
                 "primary_columns": ["low"],
                 "output_columns": 1,
                 "period_list": (5,),
             },
-            "foscCLOSE": {
+            {
+                "name": "fosc",
                 "primary_columns": ["close"],
                 "output_columns": 1,
                 "period_list": (5,),
             },
-            "fosc": {
+            {
+                "name": "fosc",
                 "primary_columns": ["close"],
                 "output_columns": 1,
                 "period_list": (5,),
             },
-            "kvo": {
+            {
+                "name": "kvo",
                 "primary_columns": ["high", "low", "close", "volume"],
                 "output_columns": 1,
                 "period_list": (2, 5),
             },
-            "linreginterceptOPEN": {
+            {
+                "name": "linregintercept",
                 "primary_columns": ["open"],
                 "output_columns": 1,
                 "period_list": (5,),
             },
-            "linreginterceptHIGH": {
+            {
+                "name": "linregintercept",
                 "primary_columns": ["high"],
                 "output_columns": 1,
                 "period_list": (5,),
             },
-            "linreginterceptLOW": {
+            {
+                "name": "linregintercept",
                 "primary_columns": ["low"],
                 "output_columns": 1,
                 "period_list": (5,),
             },
-            "linreginterceptCLOSE": {
+            {
+                "name": "linregintercept",
                 "primary_columns": ["close"],
                 "output_columns": 1,
                 "period_list": (5,),
             },
-            "linregslopeOPEN": {
+            {
+                "name": "linregslope",
                 "primary_columns": ["open"],
                 "output_columns": 1,
                 "period_list": (5,),
             },
-            "linregslopeHIGH": {
+            {
+                "name": "linregslope",
                 "primary_columns": ["high"],
                 "output_columns": 1,
                 "period_list": (5,),
             },
-            "linregslopeLOW": {
+            {
+                "name": "linregslope",
                 "primary_columns": ["low"],
                 "output_columns": 1,
                 "period_list": (5,),
             },
-            "linregslopeCLOSE": {
+            {
+                "name": "linregslope",
                 "primary_columns": ["close"],
                 "output_columns": 1,
                 "period_list": (5,),
             },
-            "macdOPEN": {
+            {
+                "name": "macd",
                 "primary_columns": ["open"],
                 "output_columns": 3,
                 "period_list": (2, 5, 9),
             },
-            "macdHIGH": {
+            {
+                "name": "macd",
                 "primary_columns": ["high"],
                 "output_columns": 3,
                 "period_list": (2, 5, 9),
             },
-            "macdLOW": {
+            {
+                "name": "macd",
                 "primary_columns": ["low"],
                 "output_columns": 3,
                 "period_list": (2, 5, 9),
             },
-            "macdCLOSE": {
+            {
+                "name": "macd",
                 "primary_columns": ["close"],
                 "output_columns": 3,
                 "period_list": (2, 5, 9),
             },
-            "marketfi": {
+            {
+                "name": "marketfi",
                 "primary_columns": ["high", "low", "volume"],
                 "output_columns": 1,
             },
-            "mass": {
+            {
+                "name": "mass",
                 "primary_columns": ["high", "low"],
                 "output_columns": 1,
                 "period_list": (5,),
             },
-            "mfi": {
+            {
+                "name": "mfi",
                 "primary_columns": ["high", "low", "close", "volume"],
                 "output_columns": 1,
                 "period_list": (5,),
             },
-            "momOPEN": {
+            {
+                "name": "mom",
                 "primary_columns": ["open"],
                 "output_columns": 1,
                 "period_list": (5,),
             },
-            "momHIGH": {
+            {
+                "name": "mom",
                 "primary_columns": ["high"],
                 "output_columns": 1,
                 "period_list": (5,),
             },
-            "momLOW": {
+            {
+                "name": "mom",
                 "primary_columns": ["low"],
                 "output_columns": 1,
                 "period_list": (5,),
             },
-            "momCLOSE": {
+            {
+                "name": "mom",
                 "primary_columns": ["close"],
                 "output_columns": 1,
                 "period_list": (5,),
             },
-            "mswOPEN": {
+            {
+                "name": "msw",
                 "primary_columns": ["open"],
                 "output_columns": 2,
                 "period_list": (5,),
             },
-            "mswHIGH": {
+            {
+                "name": "msw",
                 "primary_columns": ["high"],
                 "output_columns": 2,
                 "period_list": (5,),
             },
-            "mswLOW": {
+            {
+                "name": "msw",
                 "primary_columns": ["low"],
                 "output_columns": 2,
                 "period_list": (5,),
             },
-            "mswCLOSE": {
+            {
+                "name": "msw",
                 "primary_columns": ["close"],
                 "output_columns": 2,
                 "period_list": (5,),
             },
-            "natr": {
+            {
+                "name": "natr",
                 "primary_columns": ["high", "low", "close"],
                 "output_columns": 1,
                 "period_list": (5,),
             },
-            "nvi": {
+            {
+                "name": "nvi",
                 "primary_columns": ["close", "volume"],
                 "output_columns": 1,
             },
-            "obv": {
+            {
+                "name": "obv",
                 "primary_columns": ["close", "volume"],
                 "output_columns": 1,
             },
-            "ppoOPEN": {
+            {
+                "name": "ppo",
                 "primary_columns": ["open"],
                 "output_columns": 1,
                 "period_list": (2, 5),
             },
-            "ppoHIGH": {
+            {
+                "name": "ppo",
                 "primary_columns": ["high"],
                 "output_columns": 1,
                 "period_list": (2, 5),
             },
-            "ppoLOW": {
+            {
+                "name": "ppo",
                 "primary_columns": ["low"],
                 "output_columns": 1,
                 "period_list": (2, 5),
             },
-            "ppoCLOSE": {
+            {
+                "name": "ppo",
                 "primary_columns": ["close"],
                 "output_columns": 1,
                 "period_list": (2, 5),
             },
-            "pvi": {
+            {
+                "name": "pvi",
                 "primary_columns": ["close", "volume"],
                 "output_columns": 1,
             },
-            "qstick": {
+            {
+                "name": "qstick",
                 "primary_columns": ["open", "close"],
                 "output_columns": 1,
                 "period_list": (5,),
             },
-            "rocOPEN": {
+            {
+                "name": "roc",
                 "primary_columns": ["open"],
                 "output_columns": 1,
                 "period_list": (5,),
             },
-            "rocHIGH": {
+            {
+                "name": "roc",
                 "primary_columns": ["high"],
                 "output_columns": 1,
                 "period_list": (5,),
             },
-            "rocLOW": {
+            {
+                "name": "roc",
                 "primary_columns": ["low"],
                 "output_columns": 1,
                 "period_list": (5,),
             },
-            "rocCLOSE": {
+            {
+                "name": "roc",
                 "primary_columns": ["close"],
                 "output_columns": 1,
                 "period_list": (5,),
             },
-            "rocrOPEN": {
+            {
+                "name": "rocr",
                 "primary_columns": ["open"],
                 "output_columns": 1,
                 "period_list": (5,),
             },
-            "rocrHIGH": {
+            {
+                "name": "rocr",
                 "primary_columns": ["high"],
                 "output_columns": 1,
                 "period_list": (5,),
             },
-            "rocrLOW": {
+            {
+                "name": "rocr",
                 "primary_columns": ["low"],
                 "output_columns": 1,
                 "period_list": (5,),
             },
-            "rocrCLOSE": {
+            {
+                "name": "rocr",
                 "primary_columns": ["close"],
                 "output_columns": 1,
                 "period_list": (5,),
             },
-            "rsiOPEN": {
+            {
+                "name": "rsi",
                 "primary_columns": ["open"],
                 "output_columns": 1,
                 "period_list": (5,),
             },
-            "rsiHIGH": {
+            {
+                "name": "rsi",
                 "primary_columns": ["high"],
                 "output_columns": 1,
                 "period_list": (5,),
             },
-            "rsiLOW": {
+            {
+                "name": "rsi",
                 "primary_columns": ["low"],
                 "output_columns": 1,
                 "period_list": (5,),
             },
-            "rsiCLOSE": {
+            {
+                "name": "rsi",
                 "primary_columns": ["close"],
                 "output_columns": 1,
                 "period_list": (5,),
             },
-            "stoch": {
+            {
+                "name": "stoch",
                 "primary_columns": ["high", "low", "close"],
                 "output_columns": 2,
                 "period_list": (5, 3, 3),
             },
-            "stochrsiOPEN": {
+            {
+                "name": "stochrsi",
                 "primary_columns": ["open"],
                 "output_columns": 1,
                 "period_list": (5,),
             },
-            "stochrsiHIGH": {
+            {
+                "name": "stochrsi",
                 "primary_columns": ["high"],
                 "output_columns": 1,
                 "period_list": (5,),
             },
-            "stochrsiLOW": {
+            {
+                "name": "stochrsi",
                 "primary_columns": ["low"],
                 "output_columns": 1,
                 "period_list": (5,),
             },
-            "stochrsiCLOSE": {
+            {
+                "name": "stochrsi",
                 "primary_columns": ["close"],
                 "output_columns": 1,
                 "period_list": (5,),
             },
-            "tr": {
+            {
+                "name": "tr",
                 "primary_columns": ["high", "low", "close"],
                 "output_columns": 1,
             },
-            "trixOPEN": {
+            {
+                "name": "trix",
                 "primary_columns": ["open"],
                 "output_columns": 1,
                 "period_list": (5,),
             },
-            "trixHIGH": {
+            {
+                "name": "trix",
                 "primary_columns": ["high"],
                 "output_columns": 1,
                 "period_list": (5,),
             },
-            "trixLOW": {
+            {
+                "name": "trix",
                 "primary_columns": ["low"],
                 "output_columns": 1,
                 "period_list": (5,),
             },
-            "trixCLOSE": {
+            {
+                "name": "trix",
                 "primary_columns": ["close"],
                 "output_columns": 1,
                 "period_list": (5,),
             },
-            "ultosc": {
+            {
+                "name": "ultosc",
                 "primary_columns": ["high", "low", "close"],
                 "output_columns": 1,
                 "period_list": (2, 3, 5),
             },
-            "volatilityOPEN": {
+            {
+                "name": "volatility",
                 "primary_columns": ["open"],
                 "output_columns": 1,
                 "period_list": (5,),
             },
-            "volatilityHIGH": {
+            {
+                "name": "volatility",
                 "primary_columns": ["high"],
                 "output_columns": 1,
                 "period_list": (5,),
             },
-            "volatilityLOW": {
+            {
+                "name": "volatility",
                 "primary_columns": ["low"],
                 "output_columns": 1,
                 "period_list": (5,),
             },
-            "volatilityCLOSE": {
+            {
+                "name": "volatility",
                 "primary_columns": ["close"],
                 "output_columns": 1,
                 "period_list": (5,),
             },
-            "vosc": {
+            {
+                "name": "vosc",
                 "primary_columns": ["volume"],
                 "output_columns": 1,
                 "period_list": (2, 5),
             },
-            "wad": {
+            {
+                "name": "wad",
                 "primary_columns": ["high", "low", "close"],
                 "output_columns": 1,
             },
-            "willr": {
+            {
+                "name": "willr",
                 "primary_columns": ["high", "low", "close"],
                 "output_columns": 1,
                 "period_list": (5,),
             },
-        }
-
-    def get_permutations(self):
-        """Get all permutations of combinations."""
-        with open("indicator_combinations.txt", "a") as write_file:
-            for each in range(min(4, len(self.indicator_dict) + 1)):
-                for element in combinations(self.indicator_dict, each):
-                    write_file.write(str(list(element)) + "\n")
-
-    def get_params(self, param_name):
-        """Get the parameters of a single indicator."""
-        return self.indicator_dict[param_name]
-
-
-if __name__ == "__main__":
-    ind_dic = IndicatorDict()
-    ind_dic.get_permutations()
+        ]
