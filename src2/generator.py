@@ -1,3 +1,4 @@
+"""Module containing the generator functions for training and evaulation."""
 import os
 import shutil
 import multiprocessing as mp
@@ -9,6 +10,7 @@ from utils import utils
 
 
 def train_generator():
+    """Generator to create the training dataset."""
     if os.path.isdir(Parameters.IMAGE_OUTPUT_DIRECTORY):
         shutil.rmtree(Parameters.IMAGE_OUTPUT_DIRECTORY)
     os.mkdir(Parameters.IMAGE_OUTPUT_DIRECTORY)
@@ -76,6 +78,7 @@ def train_generator():
 
 
 def test_generator():
+    """Generator to create the dataset for evaluations."""
     if os.path.isdir(Parameters.TEST_OUTPUT_DIRECTORY):
         shutil.rmtree(Parameters.TEST_OUTPUT_DIRECTORY)
     os.mkdir(Parameters.TEST_OUTPUT_DIRECTORY)

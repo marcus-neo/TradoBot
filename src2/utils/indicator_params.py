@@ -1,9 +1,10 @@
-from itertools import chain, combinations
-import ast
-import pickle
+"""Module containing all supported indicators and their input/output params."""
 
 
 class indicator_dict:
+
+    """Class containing the dictionary of all supported indicators."""
+
     def __init__(self):
         self.indicator_dict = [
             {
@@ -573,24 +574,3 @@ class indicator_dict:
                 "period_list": (5,),
             },
         ]
-
-    def get_permutations(self):
-        with open("indicator_combinations.txt", "a") as fd:
-            for r in range(min(4, len(self.indicator_dict) + 1)):
-                for element in combinations(self.indicator_dict, r):
-                    fd.write(str(list(element)) + "\n")
-        return
-
-    def get_params(self, param_name):
-        return self.indicator_dict[param_name]
-
-
-if __name__ == "__main__":
-    ind_dic = indicator_dict()
-    ind_dic.get_permutations()
-    # with open("indicator_combinations.txt", "r") as fd:
-    #     lines = fd.readlines()
-    #     for line in lines:
-    #         indicator_lst = ast.literal_eval(line)
-    #         for indicator in indicator_lst:
-    #             print(ind_dic.get_params(indicator))

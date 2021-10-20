@@ -1,8 +1,12 @@
+"""Module containing all preset parameters.""" 
 import os
 
 
 class Parameters:
-    ROOT_DIRECTORY = "/home/marcus/PersonalGit/TradoBot"
+
+    """Class containing all preset parameters."""
+
+    ROOT_DIRECTORY = os.getcwd()
     TICKER_LIST_DIRECTORY = os.path.join(
         ROOT_DIRECTORY, "StockTickers/TickerNames.csv"
     )

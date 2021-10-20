@@ -1,7 +1,11 @@
 sklearn
 keras
-tensorflow==2.6.0
+tensorflow==2.3.0
 numpy
 Pandas
 yfinance
 tulipy
+matplotlib
+toolz
+seaborn
+Pillow
